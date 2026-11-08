@@ -10,5 +10,11 @@
     "command": "cmd /c \"g++ -O2 -std=c++17 -o bench.exe bench.cpp && bench.exe\"",
     "hide": "never",
     "reveal": "always"
+  },
+  {
+    "label": "test: build and run",
+    "command": "cmd /c \"g++ -std=c++17 -Wall -Wextra -o test.exe test.cpp board.cpp && test.exe\"",
+    "hide": "never",
+    "reveal": "always"
   }
 ]

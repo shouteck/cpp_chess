@@ -77,10 +77,11 @@ static Piece CharToPiece(char c) {
     }
 }
 
-void Position::FromFen(const std::string& fen) {
+bool Position::FromFen(const std::string& fen) {
+    Position temp;
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
-            board[i][j] = EMPTY;
+            temp.board[i][j] = EMPTY;
         }
     }
     std::istringstream fenStream(fen);
@@ -89,50 +90,92 @@ void Position::FromFen(const std::string& fen) {
     while (std::getline(fenStream, field, ' ')) {
         fields.push_back(field);
     }
+    if (fields.size() != 6) return false;
     std::istringstream rankStream(fields[0]);
     std::string rank;
     int i = 0;
     while (std::getline(rankStream, rank, '/')) {
+        if (i == 8) return false;
         int j = 0;
         for (int k = 0; k < rank.size(); k++) {
             if (rank[k] >= '1' && rank[k] <= '8') {
                 j += rank[k] - '0'; continue;
             }
-            board[i][j] = CharToPiece(rank[k]);
+            Piece p = CharToPiece(rank[k]);
+            if (p == EMPTY || j >= 8) return false;
+            temp.board[i][j] = p;
             j += 1;
         }
+        if (j != 8) return false;
         i += 1;
     }
-    side_to_move = (fields[1] == "w" ? WHITE : BLACK);
-    castling_rights = 0;
+    if (i != 8) return false;
+    if (fields[1] != "w" && fields[1] != "b") return false;
+    temp.side_to_move = (fields[1] == "w" ? WHITE : BLACK);
+    temp.castling_rights = 0;
     for (int i = 0; i < fields[2].size(); i++) {
         switch (fields[2][i]) {
             case 'K':
-                castling_rights |= WHITE_KINGSIDE;
+                temp.castling_rights |= WHITE_KINGSIDE;
                 break;
             case 'Q':
-                castling_rights |= WHITE_QUEENSIDE;
+                temp.castling_rights |= WHITE_QUEENSIDE;
                 break;
             case 'k':
-                castling_rights |= BLACK_KINGSIDE;
+                temp.castling_rights |= BLACK_KINGSIDE;
                 break;
             case 'q':
-                castling_rights |= BLACK_QUEENSIDE;
+                temp.castling_rights |= BLACK_QUEENSIDE;
                 break;
+            case '-':
+                break;
+            default:
+                return false;
         }
     }
-    halfmove_clock = 0;
+    temp.halfmove_clock = 0;
     for (int i = 0; i < fields[4].size(); i++) {
-        halfmove_clock *= 10;
-        halfmove_clock += fields[4][i] - '0';
+        temp.halfmove_clock *= 10;
+        int num = fields[4][i] - '0';
+        if (num < 0 || num > 9) return false;
+        temp.halfmove_clock += num;
     }
-    fullmove_number = 0;
+   temp.fullmove_number = 0;
     for (int i = 0; i < fields[5].size(); i++) {
-        fullmove_number *= 10;
-        fullmove_number += fields[5][i] - '0';
+        temp.fullmove_number *= 10;
+        int num = fields[5][i] - '0';
+        if (num < 0 || num > 9) return false;
+        temp.fullmove_number += num;
     }
-    en_passant_target = -1;
+    temp.en_passant_target = -1;
     if (fields[3].size() > 1) {
-        en_passant_target = (8 - (fields[3][1] - '0')) * 8 + (fields[3][0] - 'a');
+        temp.en_passant_target = (8 - (fields[3][1] - '0')) * 8 + (fields[3][0] - 'a');
+        if (temp.en_passant_target < 0 || temp.en_passant_target >= 64) return false;
     }
+    *this = temp;
+    return true;
+}
+
+Piece Position::GetPiece(int row, int col) const {
+    return board[row][col];
+}
+
+Side Position::GetSideToMove() const {
+    return side_to_move;
+}
+
+int Position::GetCastlingRights() const {
+    return castling_rights;
+}
+
+int Position::GetEnPassantTarget() const {
+    return en_passant_target;
+}
+
+int Position::GetHalfmoveClock() const {
+    return halfmove_clock;
+}
+
+int Position::GetFullmoveNumber() const {
+    return fullmove_number;
 }
