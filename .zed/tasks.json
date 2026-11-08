@@ -1,0 +1,8 @@
+[
+  {
+    "label": "g++: build and run",
+    "command": "cmd /c \"g++ -std=c++17 -Wall -Wextra -o chess.exe main.cpp board.cpp && chess.exe\"",
+    "hide": "never",
+    "reveal": "always"
+  }
+]
