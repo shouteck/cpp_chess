@@ -1,0 +1,16 @@
+# Build output
+build/
+out/
+bin/
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.a
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.swp
