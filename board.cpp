@@ -10,13 +10,13 @@ void Position::SetUpStartingPosition() {
     halfmove_clock = 0;
     fullmove_number = 1;
     en_passant_target = std::nullopt;
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < kBoardSize; i++) {
         if (i == 1 || i == 6) continue;
-        for (int j = 0; j < 8; j++) {
+        for (int j = 0; j < kBoardSize; j++) {
             board[i][j] = Piece::EMPTY;
         }
     }
-    for (int j = 0; j < 8; j++) {
+    for (int j = 0; j < kBoardSize; j++) {
         board[1][j] = Piece::BLACK_PAWN;
         board[6][j] = Piece::WHITE_PAWN;
     }
@@ -50,8 +50,8 @@ static char PieceToCharTable(Piece piece) {
 }
 
 void Position::PrintBoard() {
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
+    for (int i = 0; i < kBoardSize; i++) {
+        for (int j = 0; j < kBoardSize; j++) {
             std::cout << PieceToCharTable(board[i][j]);
             std::cout << " ";
         }
@@ -79,8 +79,8 @@ static Piece CharToPiece(char c) {
 
 bool Position::FromFen(std::string_view fen) {
     Position temp;
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
+    for (int i = 0; i < kBoardSize; i++) {
+        for (int j = 0; j < kBoardSize; j++) {
             temp.board[i][j] = Piece::EMPTY;
         }
     }
@@ -100,7 +100,7 @@ bool Position::FromFen(std::string_view fen) {
     start = 0;
     int i = 0;
     while (start <= fields[0].size()) {
-        if (i == 8) return false;
+        if (i == kBoardSize) return false;
         int j = 0;
         auto pos = fields[0].find('/', start);
         std::string_view rank = fields[0].substr(start);
@@ -110,16 +110,16 @@ bool Position::FromFen(std::string_view fen) {
                 j += c - '0'; continue;
             }
             Piece p = CharToPiece(c);
-            if (p == Piece::EMPTY || j >= 8) return false;
+            if (p == Piece::EMPTY || j >= kBoardSize) return false;
             temp.board[i][j] = p;
             j += 1;
         }
-        if (j != 8) return false;
+        if (j != kBoardSize) return false;
         i += 1;
         if (pos == std::string_view::npos) break;
         start = pos + 1;
     }
-    if (i != 8) return false;
+    if (i != kBoardSize) return false;
 
     if (fields[1] != "w" && fields[1] != "b") return false;
     temp.side_to_move = (fields[1] == "w" ? Side::WHITE : Side::BLACK);
@@ -168,7 +168,7 @@ bool Position::FromFen(std::string_view fen) {
         if (file < 'a' || file > 'h') return false;
         char rank = fields[3][1];
         if (rank != '3' && rank != '6') return false;
-        temp.en_passant_target = (8 - (fields[3][1] - '0')) * 8 + (fields[3][0] - 'a');
+        temp.en_passant_target = (kBoardSize - (fields[3][1] - '0')) * kBoardSize + (fields[3][0] - 'a');
     }
 
     *this = temp;

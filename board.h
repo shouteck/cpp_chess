@@ -38,4 +38,5 @@ class Position {
         int halfmove_clock;
         int fullmove_number;
         std::optional<int> en_passant_target;
+        static constexpr int kBoardSize = 8;
 };
