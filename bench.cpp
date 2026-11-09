@@ -4,19 +4,19 @@
 
 char PieceToCharIfElse(Piece piece) {
     switch (piece) {
-        case EMPTY:        return '.';
-        case WHITE_PAWN:   return 'P';
-        case WHITE_KNIGHT: return 'N';
-        case WHITE_BISHOP: return 'B';
-        case WHITE_ROOK:   return 'R';
-        case WHITE_QUEEN:  return 'Q';
-        case WHITE_KING:   return 'K';
-        case BLACK_PAWN:   return 'p';
-        case BLACK_KNIGHT: return 'n';
-        case BLACK_BISHOP: return 'b';
-        case BLACK_ROOK:   return 'r';
-        case BLACK_QUEEN:  return 'q';
-        case BLACK_KING:   return 'k';
+        case Piece::EMPTY:        return '.';
+        case Piece::WHITE_PAWN:   return 'P';
+        case Piece::WHITE_KNIGHT: return 'N';
+        case Piece::WHITE_BISHOP: return 'B';
+        case Piece::WHITE_ROOK:   return 'R';
+        case Piece::WHITE_QUEEN:  return 'Q';
+        case Piece::WHITE_KING:   return 'K';
+        case Piece::BLACK_PAWN:   return 'p';
+        case Piece::BLACK_KNIGHT: return 'n';
+        case Piece::BLACK_BISHOP: return 'b';
+        case Piece::BLACK_ROOK:   return 'r';
+        case Piece::BLACK_QUEEN:  return 'q';
+        case Piece::BLACK_KING:   return 'k';
     }
     return '?';  // unreachable, silences warnings
 }
@@ -29,15 +29,15 @@ char PieceToCharTable(Piece piece) {
         'p', 'n', 'b', 'r', 'q', 'k',        // BLACK_PAWN .. BLACK_KING
     };
 
-    return kPieceChars[piece];
+    return kPieceChars[static_cast<size_t>(piece)];
 }
 
 int main() {
 
     static constexpr Piece kAllPieces[] = {
-        EMPTY,
-        WHITE_PAWN, WHITE_KNIGHT, WHITE_BISHOP, WHITE_ROOK, WHITE_QUEEN, WHITE_KING,
-        BLACK_PAWN, BLACK_KNIGHT, BLACK_BISHOP, BLACK_ROOK, BLACK_QUEEN, BLACK_KING,
+        Piece::EMPTY,
+        Piece::WHITE_PAWN, Piece::WHITE_KNIGHT, Piece::WHITE_BISHOP, Piece::WHITE_ROOK, Piece::WHITE_QUEEN, Piece::WHITE_KING,
+        Piece::BLACK_PAWN, Piece::BLACK_KNIGHT, Piece::BLACK_BISHOP, Piece::BLACK_ROOK, Piece::BLACK_QUEEN, Piece::BLACK_KING,
     };
 
     auto start = std::chrono::steady_clock::now();

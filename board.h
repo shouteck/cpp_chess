@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <string_view>
 
-enum Piece : uint8_t {
+enum class Piece : uint8_t {
     EMPTY,
     WHITE_PAWN, WHITE_KNIGHT, WHITE_BISHOP, WHITE_ROOK, WHITE_QUEEN, WHITE_KING,
     BLACK_PAWN, BLACK_KNIGHT, BLACK_BISHOP, BLACK_ROOK, BLACK_QUEEN, BLACK_KING,

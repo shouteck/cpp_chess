@@ -12,29 +12,29 @@ void Position::SetUpStartingPosition() {
     for (int i = 0; i < 8; i++) {
         if (i == 1 || i == 6) continue;
         for (int j = 0; j < 8; j++) {
-            board[i][j] = EMPTY;
+            board[i][j] = Piece::EMPTY;
         }
     }
     for (int j = 0; j < 8; j++) {
-        board[1][j] = BLACK_PAWN;
-        board[6][j] = WHITE_PAWN;
+        board[1][j] = Piece::BLACK_PAWN;
+        board[6][j] = Piece::WHITE_PAWN;
     }
-    board[0][0] = BLACK_ROOK;
-    board[0][1] = BLACK_KNIGHT;
-    board[0][2] = BLACK_BISHOP;
-    board[0][3] = BLACK_QUEEN;
-    board[0][4] = BLACK_KING;
-    board[0][5] = BLACK_BISHOP;
-    board[0][6] = BLACK_KNIGHT;
-    board[0][7] = BLACK_ROOK;
-    board[7][0] = WHITE_ROOK;
-    board[7][1] = WHITE_KNIGHT;
-    board[7][2] = WHITE_BISHOP;
-    board[7][3] = WHITE_QUEEN;
-    board[7][4] = WHITE_KING;
-    board[7][5] = WHITE_BISHOP;
-    board[7][6] = WHITE_KNIGHT;
-    board[7][7] = WHITE_ROOK;
+    board[0][0] = Piece::BLACK_ROOK;
+    board[0][1] = Piece::BLACK_KNIGHT;
+    board[0][2] = Piece::BLACK_BISHOP;
+    board[0][3] = Piece::BLACK_QUEEN;
+    board[0][4] = Piece::BLACK_KING;
+    board[0][5] = Piece::BLACK_BISHOP;
+    board[0][6] = Piece::BLACK_KNIGHT;
+    board[0][7] = Piece::BLACK_ROOK;
+    board[7][0] = Piece::WHITE_ROOK;
+    board[7][1] = Piece::WHITE_KNIGHT;
+    board[7][2] = Piece::WHITE_BISHOP;
+    board[7][3] = Piece::WHITE_QUEEN;
+    board[7][4] = Piece::WHITE_KING;
+    board[7][5] = Piece::WHITE_BISHOP;
+    board[7][6] = Piece::WHITE_KNIGHT;
+    board[7][7] = Piece::WHITE_ROOK;
 }
 
 static char PieceToCharTable(Piece piece) {
@@ -45,7 +45,7 @@ static char PieceToCharTable(Piece piece) {
         'p', 'n', 'b', 'r', 'q', 'k',        // BLACK_PAWN .. BLACK_KING
     };
 
-    return kPieceChars[piece];
+    return kPieceChars[static_cast<size_t>(piece)];
 }
 
 void Position::PrintBoard() {
@@ -60,19 +60,19 @@ void Position::PrintBoard() {
 
 static Piece CharToPiece(char c) {
     switch (c) {
-        case 'P': return WHITE_PAWN;
-        case 'N': return WHITE_KNIGHT;
-        case 'B': return WHITE_BISHOP;
-        case 'R': return WHITE_ROOK;
-        case 'Q': return WHITE_QUEEN;
-        case 'K': return WHITE_KING;
-        case 'p': return BLACK_PAWN;
-        case 'n': return BLACK_KNIGHT;
-        case 'b': return BLACK_BISHOP;
-        case 'r': return BLACK_ROOK;
-        case 'q': return BLACK_QUEEN;
-        case 'k': return BLACK_KING;
-        default:  return EMPTY;
+        case 'P': return Piece::WHITE_PAWN;
+        case 'N': return Piece::WHITE_KNIGHT;
+        case 'B': return Piece::WHITE_BISHOP;
+        case 'R': return Piece::WHITE_ROOK;
+        case 'Q': return Piece::WHITE_QUEEN;
+        case 'K': return Piece::WHITE_KING;
+        case 'p': return Piece::BLACK_PAWN;
+        case 'n': return Piece::BLACK_KNIGHT;
+        case 'b': return Piece::BLACK_BISHOP;
+        case 'r': return Piece::BLACK_ROOK;
+        case 'q': return Piece::BLACK_QUEEN;
+        case 'k': return Piece::BLACK_KING;
+        default:  return Piece::EMPTY;
     }
 }
 
@@ -80,7 +80,7 @@ bool Position::FromFen(std::string_view fen) {
     Position temp;
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
-            temp.board[i][j] = EMPTY;
+            temp.board[i][j] = Piece::EMPTY;
         }
     }
     std::vector<std::string_view> fields;
@@ -109,7 +109,7 @@ bool Position::FromFen(std::string_view fen) {
                 j += c - '0'; continue;
             }
             Piece p = CharToPiece(c);
-            if (p == EMPTY || j >= 8) return false;
+            if (p == Piece::EMPTY || j >= 8) return false;
             temp.board[i][j] = p;
             j += 1;
         }

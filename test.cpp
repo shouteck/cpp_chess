@@ -38,13 +38,13 @@ static void TestStartposValues() {
     std::cout << "== startpos field values ==\n";
     Position p;
     Check(p.FromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), "parse");
-    Check(p.GetPiece(0, 0) == BLACK_ROOK, "a8 = black rook");
-    Check(p.GetPiece(0, 4) == BLACK_KING, "e8 = black king");
-    Check(p.GetPiece(1, 4) == BLACK_PAWN, "e7 = black pawn");
-    Check(p.GetPiece(6, 4) == WHITE_PAWN, "e2 = white pawn");
-    Check(p.GetPiece(7, 0) == WHITE_ROOK, "a1 = white rook");
-    Check(p.GetPiece(7, 4) == WHITE_KING, "e1 = white king");
-    Check(p.GetPiece(4, 4) == EMPTY, "e4 empty");
+    Check(p.GetPiece(0, 0) == Piece::BLACK_ROOK, "a8 = black rook");
+    Check(p.GetPiece(0, 4) == Piece::BLACK_KING, "e8 = black king");
+    Check(p.GetPiece(1, 4) == Piece::BLACK_PAWN, "e7 = black pawn");
+    Check(p.GetPiece(6, 4) == Piece::WHITE_PAWN, "e2 = white pawn");
+    Check(p.GetPiece(7, 0) == Piece::WHITE_ROOK, "a1 = white rook");
+    Check(p.GetPiece(7, 4) == Piece::WHITE_KING, "e1 = white king");
+    Check(p.GetPiece(4, 4) == Piece::EMPTY, "e4 empty");
     Check(p.GetSideToMove() == WHITE, "white to move");
     Check(p.GetCastlingRights() == 15, "all castling rights");
     Check(p.GetEnPassantTarget() == -1, "no ep target");
@@ -56,17 +56,17 @@ static void TestMidgameValues() {
     std::cout << "== midgame field values ==\n";
     Position p;
     Check(p.FromFen("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2"), "parse 1.e4 e5");
-    Check(p.GetPiece(3, 4) == BLACK_PAWN, "e5 = black pawn");
-    Check(p.GetPiece(4, 4) == WHITE_PAWN, "e4 = white pawn");
-    Check(p.GetPiece(6, 4) == EMPTY, "e2 vacated");
-    Check(p.GetPiece(1, 4) == EMPTY, "e7 vacated");
+    Check(p.GetPiece(3, 4) == Piece::BLACK_PAWN, "e5 = black pawn");
+    Check(p.GetPiece(4, 4) == Piece::WHITE_PAWN, "e4 = white pawn");
+    Check(p.GetPiece(6, 4) == Piece::EMPTY, "e2 vacated");
+    Check(p.GetPiece(1, 4) == Piece::EMPTY, "e7 vacated");
     Check(p.GetEnPassantTarget() == 20, "ep e6 = index 20");
     Check(p.GetFullmoveNumber() == 2, "fullmove 2");
     Check(p.GetSideToMove() == WHITE, "white to move");
 
     Position q;
     Check(q.FromFen("rnbqkbnr/ppp1pppp/8/3p4/8/8/PPPPPPPP/RNBQKBNR w KQkq d6 0 2"), "parse d5");
-    Check(q.GetPiece(3, 3) == BLACK_PAWN, "d5 = black pawn");
+    Check(q.GetPiece(3, 3) == Piece::BLACK_PAWN, "d5 = black pawn");
     Check(q.GetEnPassantTarget() == 19, "ep d6 = index 19 (non-e file)");
 
     Position r;
@@ -89,14 +89,14 @@ static void TestCastlingAndCounters() {
     Check(q.GetCastlingRights() == 15, "KQkq -> 15");
     Check(q.GetHalfmoveClock() == 99, "halfmove 99");
     Check(q.GetFullmoveNumber() == 42, "fullmove 42");
-    Check(q.GetPiece(0, 0) == BLACK_ROOK && q.GetPiece(0, 7) == BLACK_ROOK, "black rooks");
-    Check(q.GetPiece(0, 3) == EMPTY, "b8 empty in r3k2r");
+    Check(q.GetPiece(0, 0) == Piece::BLACK_ROOK && q.GetPiece(0, 7) == Piece::BLACK_ROOK, "black rooks");
+    Check(q.GetPiece(0, 3) == Piece::EMPTY, "b8 empty in r3k2r");
 
     Position r;
     Check(r.FromFen("8/8/8/8/8/8/8/K6k w - - 0 1"), "parse bare kings");
     Check(r.GetCastlingRights() == 0, "'-' castling -> 0");
     Check(r.GetEnPassantTarget() == -1, "'-' ep -> -1");
-    Check(r.GetPiece(7, 0) == WHITE_KING && r.GetPiece(7, 7) == BLACK_KING, "bare kings");
+    Check(r.GetPiece(7, 0) == Piece::WHITE_KING && r.GetPiece(7, 7) == Piece::BLACK_KING, "bare kings");
 }
 
 static void TestInvalidFens() {
@@ -150,9 +150,9 @@ static void TestAtomicity() {
     // Fails LATE — after board, side, castling, ep, halfmove all parsed
     bool ok = p.FromFen("8/8/8/8/8/8/8/K6k w - - 0 x");
     Check(!ok, "late failure returns false");
-    Check(p.GetPiece(0, 0) == BLACK_ROOK, "board row 0 intact");
-    Check(p.GetPiece(7, 4) == WHITE_KING, "board row 7 intact");
-    Check(p.GetPiece(6, 4) == WHITE_PAWN, "pawns intact");
+    Check(p.GetPiece(0, 0) == Piece::BLACK_ROOK, "board row 0 intact");
+    Check(p.GetPiece(7, 4) == Piece::WHITE_KING, "board row 7 intact");
+    Check(p.GetPiece(6, 4) == Piece::WHITE_PAWN, "pawns intact");
     Check(p.GetSideToMove() == WHITE, "side intact");
     Check(p.GetCastlingRights() == 15, "castling intact");
     Check(p.GetEnPassantTarget() == -1, "ep intact");
@@ -165,8 +165,8 @@ static void TestReuse() {
     Check(p.FromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), "first parse");
     Check(p.FromFen("8/8/8/8/8/8/8/K6k b - - 5 6"), "second parse");
     Check(p.GetSideToMove() == BLACK, "second parse wins");
-    Check(p.GetPiece(0, 0) == EMPTY, "old board gone");
-    Check(p.GetPiece(7, 0) == WHITE_KING, "new board present");
+    Check(p.GetPiece(0, 0) == Piece::EMPTY, "old board gone");
+    Check(p.GetPiece(7, 0) == Piece::WHITE_KING, "new board present");
     Check(p.GetHalfmoveClock() == 5 && p.GetFullmoveNumber() == 6, "new counters");
 }
 
