@@ -1,7 +1,5 @@
 #include "board.h"
 #include <iostream>
-#include <sstream>
-#include <string>
 #include <vector>
 
 void Position::SetUpStartingPosition() {
@@ -77,26 +75,34 @@ static Piece CharToPiece(char c) {
     }
 }
 
-bool Position::FromFen(const std::string& fen) {
+bool Position::FromFen(std::string_view fen) {
     Position temp;
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             temp.board[i][j] = EMPTY;
         }
     }
-    std::istringstream fenStream(fen);
-    std::string field;
-    std::vector<std::string> fields;
-    while (std::getline(fenStream, field, ' ')) {
-        fields.push_back(field);
+    std::vector<std::string_view> fields;
+    std::string_view::size_type start = 0;
+    while (start <= fen.size()) {
+        auto pos = fen.find(' ', start);
+        if (pos == std::string_view::npos) {
+            fields.push_back(fen.substr(start));
+            break;
+        }
+        fields.push_back(fen.substr(start, pos - start));
+        start = pos + 1;
     }
     if (fields.size() != 6) return false;
-    std::istringstream rankStream(fields[0]);
-    std::string rank;
+
+    start = 0;
     int i = 0;
-    while (std::getline(rankStream, rank, '/')) {
+    while (start <= fields[0].size()) {
         if (i == 8) return false;
         int j = 0;
+        auto pos = fields[0].find('/', start);
+        std::string_view rank = fields[0].substr(start);
+        if (pos != std::string_view::npos) rank = fields[0].substr(start, pos - start);
         for (int k = 0; k < rank.size(); k++) {
             if (rank[k] >= '1' && rank[k] <= '8') {
                 j += rank[k] - '0'; continue;
@@ -108,8 +114,11 @@ bool Position::FromFen(const std::string& fen) {
         }
         if (j != 8) return false;
         i += 1;
+        if (pos == std::string_view::npos) break;
+        start = pos + 1;
     }
     if (i != 8) return false;
+
     if (fields[1] != "w" && fields[1] != "b") return false;
     temp.side_to_move = (fields[1] == "w" ? WHITE : BLACK);
     temp.castling_rights = 0;

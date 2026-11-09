@@ -1,5 +1,5 @@
 #include <cstdint>
-#include <string>
+#include <string_view>
 
 enum Piece : uint8_t {
     EMPTY,
@@ -21,7 +21,7 @@ class Position {
     public:
         void SetUpStartingPosition();
         void PrintBoard();
-        bool FromFen(const std::string& fen);
+        bool FromFen(std::string_view fen);
         Piece GetPiece(int row, int col) const;
         Side GetSideToMove() const;
         int GetCastlingRights() const;
