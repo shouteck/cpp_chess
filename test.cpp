@@ -25,6 +25,8 @@ static void TestValidFens() {
         "8/8/8/8/8/8/3P4/8 w - - 0 1",
         "8/8/8/8/8/8/8/K6k b Kq - 7 9",
         "8/8/8/8/8/8/8/K6k w k - 0 1",
+        "4k3/8/8/8/3pP3/8/8/4K3 b - e3 0 2",
+        "8/8/8/8/8/8/8/K6k w - - 2147483647 1",
     };
     for (const char* fen : cases) {
         Position p;
@@ -66,6 +68,11 @@ static void TestMidgameValues() {
     Check(q.FromFen("rnbqkbnr/ppp1pppp/8/3p4/8/8/PPPPPPPP/RNBQKBNR w KQkq d6 0 2"), "parse d5");
     Check(q.GetPiece(3, 3) == BLACK_PAWN, "d5 = black pawn");
     Check(q.GetEnPassantTarget() == 19, "ep d6 = index 19 (non-e file)");
+
+    Position r;
+    Check(r.FromFen("4k3/8/8/8/3pP3/8/8/4K3 b - e3 0 2"), "parse rank-3 ep");
+    Check(r.GetSideToMove() == BLACK, "black to move");
+    Check(r.GetEnPassantTarget() == 44, "ep e3 = index 44 (rank 3)");
 }
 
 static void TestCastlingAndCounters() {
@@ -112,6 +119,22 @@ static void TestInvalidFens() {
         "8/8/8/8/8/8/8/K6k w - - 0 x",
         "8/8/8/8/8/8/8/K6k w - - 1a 1",
         "8/8/8/8/8/8/8/K6k w - - 0 1a",
+        "8/8/8/8/8/8/8/K6k w - - -1 1",
+        "8/8/8/8/8/8/8/K6k w - - 99999999999 1",
+        "8/8/8/8/8/8/8/K6k w - - 0 99999999999",
+        "8/8/8/8/8/8/8/K6k w - - 2147483648 1",
+        "8/8/8/8/8/8/8/K6k w - e 0 1",
+        "8/8/8/8/8/8/8/K6k w - e6x 0 1",
+        "8/8/8/8/8/8/8/K6k w - z6 0 1",
+        "8/8/8/8/8/8/8/K6k w - 33 0 1",
+        "8/8/8/8/8/8/8/K6k w - e4 0 1",
+        "8/8/8/8/8/8/8/K6k w - a1 0 1",
+        "8/8/8/8/8/8/8/K6k w - h8 0 1",
+        "8/8/8/8/8/8/8/K6k w  Kq - 0 1",
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ",
+        "6p/8/8/8/8/8/8/K6k w - - 0 1",
+        "8/8/8/8/8/8/8/8/ w - - 0 1",
+        "/8/8/8/8/8/8/8/K6k w - - 0 1",
     };
     for (const char* fen : cases) {
         Position p;

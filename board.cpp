@@ -1,4 +1,5 @@
 #include "board.h"
+#include <climits>
 #include <iostream>
 #include <vector>
 
@@ -146,18 +147,18 @@ bool Position::FromFen(std::string_view fen) {
 
     temp.halfmove_clock = 0;
     for (char c : fields[4]) {
-        temp.halfmove_clock *= 10;
         int num = c - '0';
         if (num < 0 || num > 9) return false;
-        temp.halfmove_clock += num;
+        if (temp.halfmove_clock > (INT_MAX - num) / 10) return false;
+        temp.halfmove_clock = temp.halfmove_clock * 10 + num;
     }
 
-   temp.fullmove_number = 0;
+    temp.fullmove_number = 0;
     for (char c : fields[5]) {
-        temp.fullmove_number *= 10;
         int num = c - '0';
         if (num < 0 || num > 9) return false;
-        temp.fullmove_number += num;
+        if (temp.fullmove_number > (INT_MAX - num) / 10) return false;
+        temp.fullmove_number = temp.fullmove_number * 10 + num;
     }
 
     temp.en_passant_target = -1;
