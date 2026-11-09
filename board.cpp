@@ -1,14 +1,15 @@
 #include "board.h"
 #include <climits>
 #include <iostream>
+#include <optional>
 #include <vector>
 
 void Position::SetUpStartingPosition() {
-    side_to_move = WHITE;
+    side_to_move = Side::WHITE;
     castling_rights = WHITE_KINGSIDE | WHITE_QUEENSIDE | BLACK_KINGSIDE | BLACK_QUEENSIDE;
     halfmove_clock = 0;
     fullmove_number = 1;
-    en_passant_target = -1;
+    en_passant_target = std::nullopt;
     for (int i = 0; i < 8; i++) {
         if (i == 1 || i == 6) continue;
         for (int j = 0; j < 8; j++) {
@@ -121,7 +122,7 @@ bool Position::FromFen(std::string_view fen) {
     if (i != 8) return false;
 
     if (fields[1] != "w" && fields[1] != "b") return false;
-    temp.side_to_move = (fields[1] == "w" ? WHITE : BLACK);
+    temp.side_to_move = (fields[1] == "w" ? Side::WHITE : Side::BLACK);
 
     temp.castling_rights = 0;
     for (char c : fields[2]) {
@@ -161,7 +162,6 @@ bool Position::FromFen(std::string_view fen) {
         temp.fullmove_number = temp.fullmove_number * 10 + num;
     }
 
-    temp.en_passant_target = -1;
     if (fields[3].size() != 2 && fields[3] != "-") return false;
     if (fields[3].size() == 2) {
         char file = fields[3][0];
@@ -187,7 +187,7 @@ int Position::GetCastlingRights() const {
     return castling_rights;
 }
 
-int Position::GetEnPassantTarget() const {
+std::optional<int> Position::GetEnPassantTarget() const {
     return en_passant_target;
 }
 

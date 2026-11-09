@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string_view>
 
 enum class Piece : uint8_t {
@@ -9,7 +10,7 @@ enum class Piece : uint8_t {
     BLACK_PAWN, BLACK_KNIGHT, BLACK_BISHOP, BLACK_ROOK, BLACK_QUEEN, BLACK_KING,
 };
 
-enum Side {
+enum class Side {
     WHITE,
     BLACK,
 };
@@ -27,7 +28,7 @@ class Position {
         [[nodiscard]] Piece GetPiece(int row, int col) const;
         [[nodiscard]] Side GetSideToMove() const;
         [[nodiscard]] int GetCastlingRights() const;
-        [[nodiscard]] int GetEnPassantTarget() const;
+        [[nodiscard]] std::optional<int> GetEnPassantTarget() const;
         [[nodiscard]] int GetHalfmoveClock() const;
         [[nodiscard]] int GetFullmoveNumber() const;
     private:
@@ -36,5 +37,5 @@ class Position {
         int castling_rights;
         int halfmove_clock;
         int fullmove_number;
-        int en_passant_target;
+        std::optional<int> en_passant_target;
 };
