@@ -103,11 +103,11 @@ bool Position::FromFen(std::string_view fen) {
         auto pos = fields[0].find('/', start);
         std::string_view rank = fields[0].substr(start);
         if (pos != std::string_view::npos) rank = fields[0].substr(start, pos - start);
-        for (int k = 0; k < rank.size(); k++) {
-            if (rank[k] >= '1' && rank[k] <= '8') {
-                j += rank[k] - '0'; continue;
+        for (char c : rank) {
+            if (c >= '1' && c <= '8') {
+                j += c - '0'; continue;
             }
-            Piece p = CharToPiece(rank[k]);
+            Piece p = CharToPiece(c);
             if (p == EMPTY || j >= 8) return false;
             temp.board[i][j] = p;
             j += 1;
@@ -121,9 +121,10 @@ bool Position::FromFen(std::string_view fen) {
 
     if (fields[1] != "w" && fields[1] != "b") return false;
     temp.side_to_move = (fields[1] == "w" ? WHITE : BLACK);
+
     temp.castling_rights = 0;
-    for (int i = 0; i < fields[2].size(); i++) {
-        switch (fields[2][i]) {
+    for (char c : fields[2]) {
+        switch (c) {
             case 'K':
                 temp.castling_rights |= WHITE_KINGSIDE;
                 break;
@@ -142,25 +143,33 @@ bool Position::FromFen(std::string_view fen) {
                 return false;
         }
     }
+
     temp.halfmove_clock = 0;
-    for (int i = 0; i < fields[4].size(); i++) {
+    for (char c : fields[4]) {
         temp.halfmove_clock *= 10;
-        int num = fields[4][i] - '0';
+        int num = c - '0';
         if (num < 0 || num > 9) return false;
         temp.halfmove_clock += num;
     }
+
    temp.fullmove_number = 0;
-    for (int i = 0; i < fields[5].size(); i++) {
+    for (char c : fields[5]) {
         temp.fullmove_number *= 10;
-        int num = fields[5][i] - '0';
+        int num = c - '0';
         if (num < 0 || num > 9) return false;
         temp.fullmove_number += num;
     }
+
     temp.en_passant_target = -1;
-    if (fields[3].size() > 1) {
+    if (fields[3].size() != 2 && fields[3] != "-") return false;
+    if (fields[3].size() == 2) {
+        char file = fields[3][0];
+        if (file < 'a' || file > 'h') return false;
+        char rank = fields[3][1];
+        if (rank != '3' && rank != '6') return false;
         temp.en_passant_target = (8 - (fields[3][1] - '0')) * 8 + (fields[3][0] - 'a');
-        if (temp.en_passant_target < 0 || temp.en_passant_target >= 64) return false;
     }
+
     *this = temp;
     return true;
 }

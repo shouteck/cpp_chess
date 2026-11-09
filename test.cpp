@@ -63,7 +63,7 @@ static void TestMidgameValues() {
     Check(p.GetSideToMove() == WHITE, "white to move");
 
     Position q;
-    q.FromFen("rnbqkbnr/ppp1pppp/8/3p4/8/8/PPPPPPPP/RNBQKBNR w KQkq d6 0 2");
+    Check(q.FromFen("rnbqkbnr/ppp1pppp/8/3p4/8/8/PPPPPPPP/RNBQKBNR w KQkq d6 0 2"), "parse d5");
     Check(q.GetPiece(3, 3) == BLACK_PAWN, "d5 = black pawn");
     Check(q.GetEnPassantTarget() == 19, "ep d6 = index 19 (non-e file)");
 }
@@ -71,14 +71,14 @@ static void TestMidgameValues() {
 static void TestCastlingAndCounters() {
     std::cout << "== castling subsets and counters ==\n";
     Position p;
-    p.FromFen("8/8/8/8/8/8/8/K6k b Kq - 7 9");
+    Check(p.FromFen("8/8/8/8/8/8/8/K6k b Kq - 7 9"), "parse Kq");
     Check(p.GetCastlingRights() == (WHITE_KINGSIDE | BLACK_QUEENSIDE), "Kq -> 9");
     Check(p.GetSideToMove() == BLACK, "black to move");
     Check(p.GetHalfmoveClock() == 7, "halfmove 7");
     Check(p.GetFullmoveNumber() == 9, "fullmove 9");
 
     Position q;
-    q.FromFen("r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 99 42");
+    Check(q.FromFen("r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 99 42"), "parse rooks");
     Check(q.GetCastlingRights() == 15, "KQkq -> 15");
     Check(q.GetHalfmoveClock() == 99, "halfmove 99");
     Check(q.GetFullmoveNumber() == 42, "fullmove 42");
@@ -86,7 +86,7 @@ static void TestCastlingAndCounters() {
     Check(q.GetPiece(0, 3) == EMPTY, "b8 empty in r3k2r");
 
     Position r;
-    r.FromFen("8/8/8/8/8/8/8/K6k w - - 0 1");
+    Check(r.FromFen("8/8/8/8/8/8/8/K6k w - - 0 1"), "parse bare kings");
     Check(r.GetCastlingRights() == 0, "'-' castling -> 0");
     Check(r.GetEnPassantTarget() == -1, "'-' ep -> -1");
     Check(r.GetPiece(7, 0) == WHITE_KING && r.GetPiece(7, 7) == BLACK_KING, "bare kings");
@@ -139,8 +139,8 @@ static void TestAtomicity() {
 static void TestReuse() {
     std::cout << "== position reuse ==\n";
     Position p;
-    p.FromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    p.FromFen("8/8/8/8/8/8/8/K6k b - - 5 6");
+    Check(p.FromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), "first parse");
+    Check(p.FromFen("8/8/8/8/8/8/8/K6k b - - 5 6"), "second parse");
     Check(p.GetSideToMove() == BLACK, "second parse wins");
     Check(p.GetPiece(0, 0) == EMPTY, "old board gone");
     Check(p.GetPiece(7, 0) == WHITE_KING, "new board present");

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 #include <string_view>
 
@@ -21,13 +23,13 @@ class Position {
     public:
         void SetUpStartingPosition();
         void PrintBoard();
-        bool FromFen(std::string_view fen);
-        Piece GetPiece(int row, int col) const;
-        Side GetSideToMove() const;
-        int GetCastlingRights() const;
-        int GetEnPassantTarget() const;
-        int GetHalfmoveClock() const;
-        int GetFullmoveNumber() const;
+        [[nodiscard]] bool FromFen(std::string_view fen);
+        [[nodiscard]] Piece GetPiece(int row, int col) const;
+        [[nodiscard]] Side GetSideToMove() const;
+        [[nodiscard]] int GetCastlingRights() const;
+        [[nodiscard]] int GetEnPassantTarget() const;
+        [[nodiscard]] int GetHalfmoveClock() const;
+        [[nodiscard]] int GetFullmoveNumber() const;
     private:
         Piece board[8][8];
         Side side_to_move;

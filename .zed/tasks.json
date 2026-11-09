@@ -1,19 +1,19 @@
 [
   {
     "label": "g++: build and run",
-    "command": "cmd /c \"g++ -std=c++17 -Wall -Wextra -o chess.exe main.cpp board.cpp && chess.exe\"",
+    "command": "cmd /c \"g++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -o chess.exe main.cpp board.cpp && chess.exe\"",
     "hide": "never",
     "reveal": "always"
   },
   {
     "label": "bench: build and run (-O2)",
-    "command": "cmd /c \"g++ -O2 -std=c++17 -o bench.exe bench.cpp && bench.exe\"",
+    "command": "cmd /c \"g++ -O2 -std=c++17 -Wall -Wextra -Wpedantic -Werror -o bench.exe bench.cpp && bench.exe\"",
     "hide": "never",
     "reveal": "always"
   },
   {
     "label": "test: build and run",
-    "command": "cmd /c \"g++ -std=c++17 -Wall -Wextra -o test.exe test.cpp board.cpp && test.exe\"",
+    "command": "cmd /c \"g++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -o test.exe test.cpp board.cpp && test.exe\"",
     "hide": "never",
     "reveal": "always"
   }
