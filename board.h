@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <optional>
 #include <string_view>
@@ -32,11 +33,12 @@ class Position {
         [[nodiscard]] int GetHalfmoveClock() const;
         [[nodiscard]] int GetFullmoveNumber() const;
     private:
-        Piece board[8][8];
+        static constexpr int kBoardSize = 8;
+        static constexpr int kSquareCount = 64;
+        std::array<Piece, kSquareCount> board;
         Side side_to_move;
         int castling_rights;
         int halfmove_clock;
         int fullmove_number;
         std::optional<int> en_passant_target;
-        static constexpr int kBoardSize = 8;
 };

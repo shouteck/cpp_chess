@@ -13,29 +13,29 @@ void Position::SetUpStartingPosition() {
     for (int i = 0; i < kBoardSize; i++) {
         if (i == 1 || i == 6) continue;
         for (int j = 0; j < kBoardSize; j++) {
-            board[i][j] = Piece::EMPTY;
+            board[i * kBoardSize + j] = Piece::EMPTY;
         }
     }
     for (int j = 0; j < kBoardSize; j++) {
-        board[1][j] = Piece::BLACK_PAWN;
-        board[6][j] = Piece::WHITE_PAWN;
+        board[1 * kBoardSize + j] = Piece::BLACK_PAWN;
+        board[6 * kBoardSize + j] = Piece::WHITE_PAWN;
     }
-    board[0][0] = Piece::BLACK_ROOK;
-    board[0][1] = Piece::BLACK_KNIGHT;
-    board[0][2] = Piece::BLACK_BISHOP;
-    board[0][3] = Piece::BLACK_QUEEN;
-    board[0][4] = Piece::BLACK_KING;
-    board[0][5] = Piece::BLACK_BISHOP;
-    board[0][6] = Piece::BLACK_KNIGHT;
-    board[0][7] = Piece::BLACK_ROOK;
-    board[7][0] = Piece::WHITE_ROOK;
-    board[7][1] = Piece::WHITE_KNIGHT;
-    board[7][2] = Piece::WHITE_BISHOP;
-    board[7][3] = Piece::WHITE_QUEEN;
-    board[7][4] = Piece::WHITE_KING;
-    board[7][5] = Piece::WHITE_BISHOP;
-    board[7][6] = Piece::WHITE_KNIGHT;
-    board[7][7] = Piece::WHITE_ROOK;
+    board[0 * kBoardSize + 0] = Piece::BLACK_ROOK;
+    board[0 * kBoardSize + 1] = Piece::BLACK_KNIGHT;
+    board[0 * kBoardSize + 2] = Piece::BLACK_BISHOP;
+    board[0 * kBoardSize + 3] = Piece::BLACK_QUEEN;
+    board[0 * kBoardSize + 4] = Piece::BLACK_KING;
+    board[0 * kBoardSize + 5] = Piece::BLACK_BISHOP;
+    board[0 * kBoardSize + 6] = Piece::BLACK_KNIGHT;
+    board[0 * kBoardSize + 7] = Piece::BLACK_ROOK;
+    board[7 * kBoardSize + 0] = Piece::WHITE_ROOK;
+    board[7 * kBoardSize + 1] = Piece::WHITE_KNIGHT;
+    board[7 * kBoardSize + 2] = Piece::WHITE_BISHOP;
+    board[7 * kBoardSize + 3] = Piece::WHITE_QUEEN;
+    board[7 * kBoardSize + 4] = Piece::WHITE_KING;
+    board[7 * kBoardSize + 5] = Piece::WHITE_BISHOP;
+    board[7 * kBoardSize + 6] = Piece::WHITE_KNIGHT;
+    board[7 * kBoardSize + 7] = Piece::WHITE_ROOK;
 }
 
 static char PieceToCharTable(Piece piece) {
@@ -52,7 +52,7 @@ static char PieceToCharTable(Piece piece) {
 void Position::PrintBoard() {
     for (int i = 0; i < kBoardSize; i++) {
         for (int j = 0; j < kBoardSize; j++) {
-            std::cout << PieceToCharTable(board[i][j]);
+            std::cout << PieceToCharTable(board[i * kBoardSize + j]);
             std::cout << " ";
         }
         std::cout << "\n";
@@ -81,7 +81,7 @@ bool Position::FromFen(std::string_view fen) {
     Position temp;
     for (int i = 0; i < kBoardSize; i++) {
         for (int j = 0; j < kBoardSize; j++) {
-            temp.board[i][j] = Piece::EMPTY;
+            temp.board[i * kBoardSize + j] = Piece::EMPTY;
         }
     }
     std::vector<std::string_view> fields;
@@ -111,7 +111,7 @@ bool Position::FromFen(std::string_view fen) {
             }
             Piece p = CharToPiece(c);
             if (p == Piece::EMPTY || j >= kBoardSize) return false;
-            temp.board[i][j] = p;
+            temp.board[i * kBoardSize + j] = p;
             j += 1;
         }
         if (j != kBoardSize) return false;
@@ -176,7 +176,7 @@ bool Position::FromFen(std::string_view fen) {
 }
 
 Piece Position::GetPiece(int row, int col) const {
-    return board[row][col];
+    return board[row * kBoardSize + col];
 }
 
 Side Position::GetSideToMove() const {
