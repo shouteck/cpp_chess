@@ -180,13 +180,23 @@ static bool ContainsMove(const std::vector<Move>& moves, int from, int to) {
     return false;
 }
 
+static int CountFrom(const std::vector<Move>& moves, int from) {
+    int count = 0;
+    for (const Move& m : moves) {
+        if (m.from == from) count++;
+    }
+    return count;
+}
+
 static void TestKnightMoves() {
     std::cout << "== knight movegen ==\n";
 
     Position p;
     Check(p.FromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), "parse startpos");
     std::vector<Move> moves = GenerateMoves(p);
-    Check(moves.size() == 4, "startpos has exactly 4 knight moves");
+    Check(moves.size() == 20, "startpos has 20 pseudo-legal moves");
+    Check(CountFrom(moves, 57) == 2, "Nb1 has 2 moves");
+    Check(CountFrom(moves, 62) == 2, "Ng1 has 2 moves");
     Check(ContainsMove(moves, 57, 40), "Nb1 -> a3 (57->40)");
     Check(ContainsMove(moves, 57, 42), "Nb1 -> c3 (57->42)");
     Check(ContainsMove(moves, 62, 45), "Ng1 -> f3 (62->45)");
@@ -200,6 +210,41 @@ static void TestKnightMoves() {
     Check(ContainsMove(qmoves, 36, 53), "Ne4 -> f2 (36->53)");
 }
 
+static void TestPawnMoves() {
+    std::cout << "== pawn movegen ==\n";
+
+    Position p;
+    Check(p.FromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), "parse startpos");
+    std::vector<Move> moves = GenerateMoves(p);
+    int pawn_moves = 0;
+    for (int sq = 48; sq <= 55; sq++) pawn_moves += CountFrom(moves, sq);
+    Check(pawn_moves == 16, "startpos: 8 white pawns x 2 moves");
+    Check(ContainsMove(moves, 48, 40), "Pa2 -> a3 (48->40)");
+    Check(ContainsMove(moves, 48, 32), "Pa2 -> a4 (48->32)");
+    Check(ContainsMove(moves, 55, 39), "Ph2 -> h4 (55->39)");
+
+    Position cap;
+    Check(cap.FromFen("4k3/8/8/3p4/4P3/8/8/4K3 w - - 0 1"), "parse capture pos");
+    std::vector<Move> cmoves = GenerateMoves(cap);
+    Check(CountFrom(cmoves, 36) == 2, "Pe4: push + capture d5");
+    Check(ContainsMove(cmoves, 36, 28), "Pe4 -> e5 (36->28)");
+    Check(ContainsMove(cmoves, 36, 27), "Pe4xd5 (36->27)");
+    Check(!ContainsMove(cmoves, 36, 29), "no capture on empty f5 (36->29)");
+
+    Position blk;
+    Check(blk.FromFen("4k3/8/8/8/8/4p3/4P3/4K3 w - - 0 1"), "parse blocked pos");
+    std::vector<Move> bmoves = GenerateMoves(blk);
+    Check(CountFrom(bmoves, 52) == 0, "blocked pawn has no moves");
+    Check(bmoves.empty(), "blocked pos: no pseudo-legal moves");
+
+    Position ep;
+    Check(ep.FromFen("4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 2"), "parse ep pos");
+    std::vector<Move> emoves = GenerateMoves(ep);
+    Check(CountFrom(emoves, 28) == 2, "Pe5: push + ep capture");
+    Check(ContainsMove(emoves, 28, 20), "Pe5 -> e6 (28->20)");
+    Check(ContainsMove(emoves, 28, 19), "Pe5xd6 ep (28->19)");
+}
+
 int main() {
     TestValidFens();
     TestStartposValues();
@@ -209,6 +254,7 @@ int main() {
     TestAtomicity();
     TestReuse();
     TestKnightMoves();
+    TestPawnMoves();
 
     if (g_failures == 0) {
         std::cout << "\nALL TESTS PASSED\n";
