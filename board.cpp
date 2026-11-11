@@ -4,6 +4,34 @@
 #include <optional>
 #include <vector>
 
+static constexpr char kPieceChars[] = {
+    '.',  // EMPTY
+    'P', 'N', 'B', 'R', 'Q', 'K',        // WHITE_PAWN .. WHITE_KING
+    'p', 'n', 'b', 'r', 'q', 'k',        // BLACK_PAWN .. BLACK_KING
+};
+
+static constexpr char PieceToCharTable(Piece piece) noexcept {
+    return kPieceChars[static_cast<size_t>(piece)];
+}
+
+static constexpr  Piece CharToPiece(char c) noexcept {
+    switch (c) {
+        case 'P': return Piece::WHITE_PAWN;
+        case 'N': return Piece::WHITE_KNIGHT;
+        case 'B': return Piece::WHITE_BISHOP;
+        case 'R': return Piece::WHITE_ROOK;
+        case 'Q': return Piece::WHITE_QUEEN;
+        case 'K': return Piece::WHITE_KING;
+        case 'p': return Piece::BLACK_PAWN;
+        case 'n': return Piece::BLACK_KNIGHT;
+        case 'b': return Piece::BLACK_BISHOP;
+        case 'r': return Piece::BLACK_ROOK;
+        case 'q': return Piece::BLACK_QUEEN;
+        case 'k': return Piece::BLACK_KING;
+        default:  return Piece::EMPTY;
+    }
+}
+
 void Position::SetUpStartingPosition() {
     side_to_move = Side::WHITE;
     castling_rights = WHITE_KINGSIDE | WHITE_QUEENSIDE | BLACK_KINGSIDE | BLACK_QUEENSIDE;
@@ -38,16 +66,6 @@ void Position::SetUpStartingPosition() {
     board[7 * kBoardSize + 7] = Piece::WHITE_ROOK;
 }
 
-static constexpr char kPieceChars[] = {
-    '.',  // EMPTY
-    'P', 'N', 'B', 'R', 'Q', 'K',        // WHITE_PAWN .. WHITE_KING
-    'p', 'n', 'b', 'r', 'q', 'k',        // BLACK_PAWN .. BLACK_KING
-};
-
-static constexpr char PieceToCharTable(Piece piece) noexcept {
-    return kPieceChars[static_cast<size_t>(piece)];
-}
-
 void Position::PrintBoard() const {
     for (int i = 0; i < kBoardSize; i++) {
         for (int j = 0; j < kBoardSize; j++) {
@@ -55,24 +73,6 @@ void Position::PrintBoard() const {
             std::cout << " ";
         }
         std::cout << "\n";
-    }
-}
-
-static constexpr  Piece CharToPiece(char c) noexcept {
-    switch (c) {
-        case 'P': return Piece::WHITE_PAWN;
-        case 'N': return Piece::WHITE_KNIGHT;
-        case 'B': return Piece::WHITE_BISHOP;
-        case 'R': return Piece::WHITE_ROOK;
-        case 'Q': return Piece::WHITE_QUEEN;
-        case 'K': return Piece::WHITE_KING;
-        case 'p': return Piece::BLACK_PAWN;
-        case 'n': return Piece::BLACK_KNIGHT;
-        case 'b': return Piece::BLACK_BISHOP;
-        case 'r': return Piece::BLACK_ROOK;
-        case 'q': return Piece::BLACK_QUEEN;
-        case 'k': return Piece::BLACK_KING;
-        default:  return Piece::EMPTY;
     }
 }
 

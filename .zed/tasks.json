@@ -13,13 +13,13 @@
   },
   {
     "label": "test: build and run",
-    "command": "cmd /c \"g++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -o test.exe test.cpp board.cpp && test.exe\"",
+    "command": "cmd /c \"g++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -o test.exe test.cpp board.cpp movegen.cpp && test.exe\"",
     "hide": "never",
     "reveal": "always"
   },
   {
     "label": "test: build and run (checked)",
-    "command": "cmd /c \"g++ -std=c++17 -D_GLIBCXX_DEBUG -g -o test_dbg.exe test.cpp board.cpp && test_dbg.exe\"",
+    "command": "cmd /c \"g++ -std=c++17 -D_GLIBCXX_DEBUG -g -o test_dbg.exe test.cpp board.cpp movegen.cpp && test_dbg.exe\"",
     "hide": "never",
     "reveal": "always"
   }

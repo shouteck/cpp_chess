@@ -1,7 +1,9 @@
 #include "board.h"
+#include "movegen.h"
 #include <iostream>
 #include <optional>
 #include <string>
+#include <vector>
 
 static int g_failures = 0;
 
@@ -171,6 +173,33 @@ static void TestReuse() {
     Check(p.GetHalfmoveClock() == 5 && p.GetFullmoveNumber() == 6, "new counters");
 }
 
+static bool ContainsMove(const std::vector<Move>& moves, int from, int to) {
+    for (const Move& m : moves) {
+        if (m.from == from && m.to == to) return true;
+    }
+    return false;
+}
+
+static void TestKnightMoves() {
+    std::cout << "== knight movegen ==\n";
+
+    Position p;
+    Check(p.FromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), "parse startpos");
+    std::vector<Move> moves = GenerateMoves(p);
+    Check(moves.size() == 4, "startpos has exactly 4 knight moves");
+    Check(ContainsMove(moves, 57, 40), "Nb1 -> a3 (57->40)");
+    Check(ContainsMove(moves, 57, 42), "Nb1 -> c3 (57->42)");
+    Check(ContainsMove(moves, 62, 45), "Ng1 -> f3 (62->45)");
+    Check(ContainsMove(moves, 62, 47), "Ng1 -> h3 (62->47)");
+
+    Position q;
+    Check(q.FromFen("4k3/8/8/8/4N3/8/8/4K3 w - - 0 1"), "parse center knight");
+    std::vector<Move> qmoves = GenerateMoves(q);
+    Check(qmoves.size() == 8, "center knight (e4) has all 8 moves");
+    Check(ContainsMove(qmoves, 36, 19), "Ne4 -> c5 (36->19)");
+    Check(ContainsMove(qmoves, 36, 53), "Ne4 -> f2 (36->53)");
+}
+
 int main() {
     TestValidFens();
     TestStartposValues();
@@ -179,6 +208,7 @@ int main() {
     TestInvalidFens();
     TestAtomicity();
     TestReuse();
+    TestKnightMoves();
 
     if (g_failures == 0) {
         std::cout << "\nALL TESTS PASSED\n";
