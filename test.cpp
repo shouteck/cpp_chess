@@ -243,6 +243,40 @@ static void TestPawnMoves() {
     Check(CountFrom(emoves, 28) == 2, "Pe5: push + ep capture");
     Check(ContainsMove(emoves, 28, 20), "Pe5 -> e6 (28->20)");
     Check(ContainsMove(emoves, 28, 19), "Pe5xd6 ep (28->19)");
+
+    std::cout << "== black pawn movegen ==\n";
+
+    Position bstart;
+    Check(bstart.FromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1"), "parse black startpos");
+    std::vector<Move> bs = GenerateMoves(bstart);
+    Check(bs.size() == 20, "black startpos has 20 pseudo-legal moves");
+    int bpawn_moves = 0;
+    for (int sq = 8; sq <= 15; sq++) bpawn_moves += CountFrom(bs, sq);
+    Check(bpawn_moves == 16, "black startpos: 8 pawns x 2 moves");
+    Check(ContainsMove(bs, 8, 16), "Pa7 -> a6 (8->16)");
+    Check(ContainsMove(bs, 8, 24), "Pa7 -> a5 (8->24)");
+    Check(ContainsMove(bs, 15, 31), "Ph7 -> h5 (15->31)");
+
+    Position bcap;
+    Check(bcap.FromFen("4k3/8/8/4p3/3P4/8/8/4K3 b - - 0 1"), "parse black capture pos");
+    std::vector<Move> bcm = GenerateMoves(bcap);
+    Check(CountFrom(bcm, 28) == 2, "Pe5: push + capture d4");
+    Check(ContainsMove(bcm, 28, 36), "Pe5 -> e4 (28->36)");
+    Check(ContainsMove(bcm, 28, 35), "Pe5xd4 (28->35)");
+    Check(!ContainsMove(bcm, 28, 37), "no capture on empty f4 (28->37)");
+
+    Position bblk;
+    Check(bblk.FromFen("4k3/4p3/4P3/8/8/8/8/4K3 b - - 0 1"), "parse black blocked pos");
+    std::vector<Move> bbm = GenerateMoves(bblk);
+    Check(CountFrom(bbm, 12) == 0, "blocked black pawn has no moves");
+    Check(bbm.empty(), "blocked black pos: no pseudo-legal moves");
+
+    Position bep;
+    Check(bep.FromFen("4k3/8/8/8/3Pp3/8/8/4K3 b - d3 0 2"), "parse black ep pos");
+    std::vector<Move> bem = GenerateMoves(bep);
+    Check(CountFrom(bem, 36) == 2, "Pe4: push + ep capture");
+    Check(ContainsMove(bem, 36, 44), "Pe4 -> e3 (36->44)");
+    Check(ContainsMove(bem, 36, 43), "Pe4xd3 ep (36->43)");
 }
 
 int main() {

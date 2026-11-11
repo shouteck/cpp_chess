@@ -27,9 +27,10 @@ std::vector<Move> GenerateMoves(const Position& pos) {
                 }
             }
 
-            if (p1 == Piece::WHITE_PAWN) {
-                int new_i = i - 1;
-                if (new_i < 0) continue;
+            if (p1 == Piece::WHITE_PAWN || p1 == Piece::BLACK_PAWN) {
+                int dir = (playing_side == Side::WHITE) ? 1 : -1;
+                int new_i = i - 1 * dir;
+                if (new_i < 0 || new_i >= kBoardSize) continue;
                 int to = new_i * kBoardSize + j;
                 Piece p2 = pos.GetPiece(new_i, j);
                 if (p2 == Piece::EMPTY) {
@@ -57,11 +58,11 @@ std::vector<Move> GenerateMoves(const Position& pos) {
                         moves.push_back(Move{from, to});
                     }
                 }
-                if (i == 6) {
-                    new_i = i - 2;
+                if ((playing_side == Side::WHITE && i == 6) || (playing_side == Side::BLACK && i == 1)) {
+                    new_i = i - 2 * dir;
                     to = new_i * kBoardSize + j;
                     p2 = pos.GetPiece(new_i, j);
-                    if ((pos.GetPiece(i - 1, j) == Piece::EMPTY) && (p2 == Piece::EMPTY)) {
+                    if ((pos.GetPiece(i - 1 * dir, j) == Piece::EMPTY) && (p2 == Piece::EMPTY)) {
                         moves.push_back(Move{from, to});
                     }
                 }
