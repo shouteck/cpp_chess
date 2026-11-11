@@ -24,14 +24,26 @@ enum CastlingMask {
 class Position {
     public:
         void SetUpStartingPosition();
-        void PrintBoard();
+        void PrintBoard() const;
         [[nodiscard]] bool FromFen(std::string_view fen);
-        [[nodiscard]] Piece GetPiece(int row, int col) const;
-        [[nodiscard]] Side GetSideToMove() const;
-        [[nodiscard]] int GetCastlingRights() const;
-        [[nodiscard]] std::optional<int> GetEnPassantTarget() const;
-        [[nodiscard]] int GetHalfmoveClock() const;
-        [[nodiscard]] int GetFullmoveNumber() const;
+        [[nodiscard]] constexpr Piece GetPiece(int row, int col) const noexcept {
+            return board[row * kBoardSize + col];
+        }
+        [[nodiscard]] constexpr Side GetSideToMove() const noexcept {
+            return side_to_move;
+        }
+        [[nodiscard]] constexpr int GetCastlingRights() const noexcept {
+            return castling_rights;
+        }
+        [[nodiscard]] constexpr std::optional<int> GetEnPassantTarget() const noexcept {
+            return en_passant_target;
+        }
+        [[nodiscard]] constexpr int GetHalfmoveClock() const noexcept {
+            return halfmove_clock;
+        }
+        [[nodiscard]] constexpr int GetFullmoveNumber() const noexcept {
+            return fullmove_number;
+        }
     private:
         static constexpr int kBoardSize = 8;
         static constexpr int kSquareCount = 64;

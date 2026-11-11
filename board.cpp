@@ -38,18 +38,17 @@ void Position::SetUpStartingPosition() {
     board[7 * kBoardSize + 7] = Piece::WHITE_ROOK;
 }
 
-static char PieceToCharTable(Piece piece) {
+static constexpr char kPieceChars[] = {
+    '.',  // EMPTY
+    'P', 'N', 'B', 'R', 'Q', 'K',        // WHITE_PAWN .. WHITE_KING
+    'p', 'n', 'b', 'r', 'q', 'k',        // BLACK_PAWN .. BLACK_KING
+};
 
-    static constexpr char kPieceChars[] = {
-        '.',  // EMPTY
-        'P', 'N', 'B', 'R', 'Q', 'K',        // WHITE_PAWN .. WHITE_KING
-        'p', 'n', 'b', 'r', 'q', 'k',        // BLACK_PAWN .. BLACK_KING
-    };
-
+static constexpr char PieceToCharTable(Piece piece) noexcept {
     return kPieceChars[static_cast<size_t>(piece)];
 }
 
-void Position::PrintBoard() {
+void Position::PrintBoard() const {
     for (int i = 0; i < kBoardSize; i++) {
         for (int j = 0; j < kBoardSize; j++) {
             std::cout << PieceToCharTable(board[i * kBoardSize + j]);
@@ -59,7 +58,7 @@ void Position::PrintBoard() {
     }
 }
 
-static Piece CharToPiece(char c) {
+static constexpr  Piece CharToPiece(char c) noexcept {
     switch (c) {
         case 'P': return Piece::WHITE_PAWN;
         case 'N': return Piece::WHITE_KNIGHT;
@@ -173,28 +172,4 @@ bool Position::FromFen(std::string_view fen) {
 
     *this = temp;
     return true;
-}
-
-Piece Position::GetPiece(int row, int col) const {
-    return board[row * kBoardSize + col];
-}
-
-Side Position::GetSideToMove() const {
-    return side_to_move;
-}
-
-int Position::GetCastlingRights() const {
-    return castling_rights;
-}
-
-std::optional<int> Position::GetEnPassantTarget() const {
-    return en_passant_target;
-}
-
-int Position::GetHalfmoveClock() const {
-    return halfmove_clock;
-}
-
-int Position::GetFullmoveNumber() const {
-    return fullmove_number;
 }
