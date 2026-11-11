@@ -277,6 +277,20 @@ static void TestPawnMoves() {
     Check(CountFrom(bem, 36) == 2, "Pe4: push + ep capture");
     Check(ContainsMove(bem, 36, 44), "Pe4 -> e3 (36->44)");
     Check(ContainsMove(bem, 36, 43), "Pe4xd3 ep (36->43)");
+
+    Position edge;
+    Check(edge.FromFen("4k3/8/8/8/7P/8/8/4K3 w - - 0 1"), "parse h-file edge pos");
+    std::vector<Move> edge_moves = GenerateMoves(edge);
+    Check(edge_moves.size() == 1, "h4 pawn has only the push");
+    Check(ContainsMove(edge_moves, 39, 31), "Ph4 -> h5 (39->31)");
+    Check(!ContainsMove(edge_moves, 39, 32), "no file-wrap capture onto a4 (39->32)");
+
+    Position edge_a;
+    Check(edge_a.FromFen("4k3/8/8/8/P7/8/8/4K3 w - - 0 1"), "parse a-file edge pos");
+    std::vector<Move> edge_a_moves = GenerateMoves(edge_a);
+    Check(edge_a_moves.size() == 1, "a4 pawn has only the push");
+    Check(ContainsMove(edge_a_moves, 32, 24), "Pa4 -> a5 (32->24)");
+    Check(!ContainsMove(edge_a_moves, 32, 23), "no file-wrap capture onto h6 (32->23)");
 }
 
 int main() {

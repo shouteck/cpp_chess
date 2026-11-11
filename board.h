@@ -24,6 +24,8 @@ enum CastlingMask {
 
 constexpr int kBoardSize = 8;
 constexpr int kSquareCount = 64;
+constexpr int kWhitePawnStartRow = 6;
+constexpr int kBlackPawnStartRow = 1;
 
 constexpr std::array<Side, 13> kPieceSide = {
     Side::WHITE,
