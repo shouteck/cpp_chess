@@ -51,10 +51,23 @@ constexpr PieceType GetPieceType(Piece p) noexcept {
     return kPieceType[static_cast<std::size_t>(p)];
 }
 
-static constexpr std::array<Piece, 4> kWhitePromoPieces = { Piece::WHITE_KNIGHT, Piece::WHITE_BISHOP,
-    Piece::WHITE_ROOK, Piece::WHITE_QUEEN, };
-static constexpr std::array<Piece, 4> kBlackPromoPieces = { Piece::BLACK_KNIGHT, Piece::BLACK_BISHOP,
-    Piece::BLACK_ROOK, Piece::BLACK_QUEEN, };
+struct CastleInfo {
+    int rights_bit;
+    int king_from, king_to;
+    int empty_lo, empty_hi;
+    int rook_from, rook_to;
+};
+
+constexpr std::array<CastleInfo, 4> kCastles = {{
+    // WHITE_KINGSIDE:  Ke1->g1, Rh1->f1, f1..g1 empty
+    {CastlingMask::WHITE_KINGSIDE, 60, 62, 61, 62, 63, 61},
+    // WHITE_QUEENSIDE: Ke1->c1, Ra1->d1, b1..d1 empty
+    {CastlingMask::WHITE_QUEENSIDE, 60, 58, 57, 59, 56, 59},
+    // BLACK_KINGSIDE:  ke8->g8, rh8->f8, f8..g8 empty
+    {CastlingMask::BLACK_KINGSIDE, 4, 6, 5, 6, 7, 5},
+    // BLACK_QUEENSIDE: ke8->c8, ra8->d8, b8..d8 empty
+    {CastlingMask::BLACK_QUEENSIDE, 4, 2, 1, 3, 0, 3},
+}};
 
 class Position {
     public:
@@ -63,6 +76,9 @@ class Position {
         [[nodiscard]] bool FromFen(std::string_view fen);
         [[nodiscard]] constexpr Piece GetPiece(int row, int col) const noexcept {
             return board[row * kBoardSize + col];
+        }
+        [[nodiscard]] constexpr Piece GetPiece(int square) const noexcept {
+            return board[square];
         }
         [[nodiscard]] constexpr Side GetSideToMove() const noexcept {
             return side_to_move;

@@ -20,6 +20,17 @@ static constexpr std::array<std::pair<int, int>, 8> kKingDrDc = {{
     {-1, -1}, {-1, 0}, {-1, 1}, { 0, -1}, { 0, 1}, { 1, -1}, { 1, 0}, { 1, 1}
 }};
 
+static constexpr bool SquaresAreEmpty(const Position& pos, int lo, int hi) {
+    for (int sq = lo; sq <= hi; sq++)
+        if (pos.GetPiece(sq) != Piece::EMPTY) return false;
+    return true;
+}
+
+static constexpr std::array<Piece, 4> kWhitePromoPieces = { Piece::WHITE_KNIGHT, Piece::WHITE_BISHOP,
+    Piece::WHITE_ROOK, Piece::WHITE_QUEEN, };
+static constexpr std::array<Piece, 4> kBlackPromoPieces = { Piece::BLACK_KNIGHT, Piece::BLACK_BISHOP,
+    Piece::BLACK_ROOK, Piece::BLACK_QUEEN, };
+
 template <std::size_t N>
 static void GenerateSlidingMoves(const Position& pos, int from, int i, int j,
     Side playing_side, const std::array<std::pair<int, int>, N>& directions, std::vector<Move>& moves) {
@@ -135,17 +146,13 @@ std::vector<Move> GenerateMoves(const Position& pos) {
                             moves.push_back(Move{from, to});
                         }
                     }
-                    if (pos.GetCastlingRights() & CastlingMask::WHITE_KINGSIDE) {
-                        if (i == 7 && j == 4) {
-                            int dbl_j = j + 2;
-                            int to = i * kBoardSize + dbl_j;
-                            Piece p2 = pos.GetPiece(i, dbl_j);
-                            if ((pos.GetPiece(i, j + 1) == Piece::EMPTY) && (p2 == Piece::EMPTY)) {
-                                moves.push_back(Move{from, to, Piece::EMPTY, MoveKind::CASTLE_KINGSIDE});
-                            }
-                        }
+                    for (const CastleInfo& c : kCastles) {
+                        if (from != c.king_from) continue;
+                        if (!(pos.GetCastlingRights() & c.rights_bit)) continue;
+                        if (!SquaresAreEmpty(pos, c.empty_lo, c.empty_hi)) continue;
+                        moves.push_back(Move{from, c.king_to, Piece::EMPTY,
+                            c.king_to > c.king_from ? MoveKind::CASTLE_KINGSIDE : MoveKind::CASTLE_QUEENSIDE});
                     }
-
                     break;
                 }
                 default:

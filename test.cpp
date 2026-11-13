@@ -195,6 +195,13 @@ static bool ContainsPromoMove(const std::vector<Move>& moves, int from, int to, 
     return false;
 }
 
+static bool ContainsKindMove(const std::vector<Move>& moves, int from, int to, MoveKind kind) {
+    for (const Move& m : moves) {
+        if (m.from == from && m.to == to && m.kind == kind) return true;
+    }
+    return false;
+}
+
 static void TestKnightMoves() {
     std::cout << "== knight movegen ==\n";
 
@@ -329,6 +336,39 @@ static void TestPromotionMoves() {
     Check(ContainsPromoMove(bm, 52, 60, Piece::BLACK_BISHOP), "e1=b (52->60)");
 }
 
+static void TestCastleMoves() {
+    std::cout << "== castle movegen ==\n";
+
+    Position open;
+    Check(open.FromFen("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1"), "parse open castle pos");
+    std::vector<Move> m = GenerateMoves(open);
+    Check(ContainsKindMove(m, 60, 62, MoveKind::CASTLE_KINGSIDE), "O-O: e1->g1 (60->62)");
+    Check(ContainsKindMove(m, 60, 58, MoveKind::CASTLE_QUEENSIDE), "O-O-O: e1->c1 (60->58)");
+
+    Position bopen;
+    Check(bopen.FromFen("r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1"), "parse black open castle pos");
+    std::vector<Move> bm = GenerateMoves(bopen);
+    Check(ContainsKindMove(bm, 4, 6, MoveKind::CASTLE_KINGSIDE), "O-O: e8->g8 (4->6)");
+    Check(ContainsKindMove(bm, 4, 2, MoveKind::CASTLE_QUEENSIDE), "O-O-O: e8->c8 (4->2)");
+
+    Position partial;
+    Check(partial.FromFen("r3k2r/8/8/8/8/8/8/R3K2R w K - 0 1"), "parse K-only rights");
+    std::vector<Move> pm = GenerateMoves(partial);
+    Check(ContainsKindMove(pm, 60, 62, MoveKind::CASTLE_KINGSIDE), "K right: kingside available");
+    Check(!ContainsKindMove(pm, 60, 58, MoveKind::CASTLE_QUEENSIDE), "K right: queenside absent");
+
+    Position blocked;
+    Check(blocked.FromFen("r3k2r/8/8/8/8/8/8/R3K1NR w KQkq - 0 1"), "parse blocked castle pos");
+    std::vector<Move> km = GenerateMoves(blocked);
+    Check(!ContainsKindMove(km, 60, 62, MoveKind::CASTLE_KINGSIDE), "g1 occupied: no kingside");
+    Check(ContainsKindMove(km, 60, 58, MoveKind::CASTLE_QUEENSIDE), "g1 occupied: queenside still available");
+
+    Position wrongside;
+    Check(wrongside.FromFen("r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1"), "black cannot use white rights");
+    std::vector<Move> wm = GenerateMoves(wrongside);
+    Check(!ContainsKindMove(wm, 60, 62, MoveKind::CASTLE_KINGSIDE), "black turn: no white castle");
+}
+
 int main() {
     TestValidFens();
     TestStartposValues();
@@ -340,6 +380,7 @@ int main() {
     TestKnightMoves();
     TestPawnMoves();
     TestPromotionMoves();
+    TestCastleMoves();
 
     if (g_failures == 0) {
         std::cout << "\nALL TESTS PASSED\n";
