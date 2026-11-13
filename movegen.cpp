@@ -1,5 +1,6 @@
 #include "movegen.h"
 #include "board.h"
+#include "move.h"
 
 static constexpr std::array<std::pair<int, int>, 8> kKnightDrDc = {{
     {2, 1}, {2, -1}, {1, 2}, {1, -2}, {-2, 1}, {-2, -1}, {-1, 2}, {-1, -2},
@@ -71,14 +72,14 @@ std::vector<Move> GenerateMoves(const Position& pos) {
                     const auto& promo_pieces = (playing_side == Side::WHITE)
                             ? kWhitePromoPieces : kBlackPromoPieces;
                     int new_i = i - dir;
-                    auto emit = [&](int to) {
+                    auto emit = [&](int to, MoveKind kind = MoveKind::NORMAL) {
                         if (new_i == promo_rank) {
                             for (Piece promo : promo_pieces) {
                                 moves.push_back(Move{from, to, promo});
                             }
                         }
                         else {
-                            moves.push_back(Move{from, to});
+                            moves.push_back(Move{from, to, Piece::EMPTY, kind});
                         }
                     };
                     if (new_i < 0 || new_i >= kBoardSize) continue;
@@ -96,7 +97,7 @@ std::vector<Move> GenerateMoves(const Position& pos) {
                                 emit(to);
                             }
                             else if (p2 == Piece::EMPTY && ep && *ep == to) {
-                                emit(to);
+                                emit(to, MoveKind::EN_PASSANT);
                             }
                         }
                     }
@@ -134,6 +135,17 @@ std::vector<Move> GenerateMoves(const Position& pos) {
                             moves.push_back(Move{from, to});
                         }
                     }
+                    if (pos.GetCastlingRights() & CastlingMask::WHITE_KINGSIDE) {
+                        if (i == 7 && j == 4) {
+                            int dbl_j = j + 2;
+                            int to = i * kBoardSize + dbl_j;
+                            Piece p2 = pos.GetPiece(i, dbl_j);
+                            if ((pos.GetPiece(i, j + 1) == Piece::EMPTY) && (p2 == Piece::EMPTY)) {
+                                moves.push_back(Move{from, to, Piece::EMPTY, MoveKind::CASTLE_KINGSIDE});
+                            }
+                        }
+                    }
+
                     break;
                 }
                 default:
