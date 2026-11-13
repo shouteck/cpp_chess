@@ -37,6 +37,20 @@ constexpr Side PieceSide(Piece p) noexcept {
     return kPieceSide[static_cast<std::size_t>(p)];
 }
 
+enum class PieceType {
+    PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING,
+};
+
+constexpr std::array<PieceType, 13> kPieceType = {
+    PieceType::PAWN,
+    PieceType::PAWN, PieceType::KNIGHT, PieceType::BISHOP, PieceType::ROOK, PieceType::QUEEN, PieceType::KING,
+    PieceType::PAWN, PieceType::KNIGHT, PieceType::BISHOP, PieceType::ROOK, PieceType::QUEEN, PieceType::KING,
+};
+
+constexpr PieceType GetPieceType(Piece p) noexcept {
+    return kPieceType[static_cast<std::size_t>(p)];
+}
+
 class Position {
     public:
         void SetUpStartingPosition();

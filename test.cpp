@@ -205,9 +205,12 @@ static void TestKnightMoves() {
     Position q;
     Check(q.FromFen("4k3/8/8/8/4N3/8/8/4K3 w - - 0 1"), "parse center knight");
     std::vector<Move> qmoves = GenerateMoves(q);
-    Check(qmoves.size() == 8, "center knight (e4) has all 8 moves");
+    Check(CountFrom(qmoves, 36) == 8, "center knight (e4) has all 8 moves");
     Check(ContainsMove(qmoves, 36, 19), "Ne4 -> c5 (36->19)");
     Check(ContainsMove(qmoves, 36, 53), "Ne4 -> f2 (36->53)");
+    Check(CountFrom(qmoves, 60) == 5, "corner-edge king (e1) has 5 moves");
+    Check(ContainsMove(qmoves, 60, 51), "Ke1 -> d2 (60->51)");
+    Check(ContainsMove(qmoves, 60, 53), "Ke1 -> f2 (60->53)");
 }
 
 static void TestPawnMoves() {
@@ -235,7 +238,7 @@ static void TestPawnMoves() {
     Check(blk.FromFen("4k3/8/8/8/8/4p3/4P3/4K3 w - - 0 1"), "parse blocked pos");
     std::vector<Move> bmoves = GenerateMoves(blk);
     Check(CountFrom(bmoves, 52) == 0, "blocked pawn has no moves");
-    Check(bmoves.empty(), "blocked pos: no pseudo-legal moves");
+    Check(CountFrom(bmoves, 60) == 4, "Ke1 has 4 moves (e2 occupied)");
 
     Position ep;
     Check(ep.FromFen("4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 2"), "parse ep pos");
@@ -269,7 +272,7 @@ static void TestPawnMoves() {
     Check(bblk.FromFen("4k3/4p3/4P3/8/8/8/8/4K3 b - - 0 1"), "parse black blocked pos");
     std::vector<Move> bbm = GenerateMoves(bblk);
     Check(CountFrom(bbm, 12) == 0, "blocked black pawn has no moves");
-    Check(bbm.empty(), "blocked black pos: no pseudo-legal moves");
+    Check(CountFrom(bbm, 4) == 4, "ke8 has 4 moves (e7 occupied)");
 
     Position bep;
     Check(bep.FromFen("4k3/8/8/8/3Pp3/8/8/4K3 b - d3 0 2"), "parse black ep pos");
@@ -281,14 +284,14 @@ static void TestPawnMoves() {
     Position edge;
     Check(edge.FromFen("4k3/8/8/8/7P/8/8/4K3 w - - 0 1"), "parse h-file edge pos");
     std::vector<Move> edge_moves = GenerateMoves(edge);
-    Check(edge_moves.size() == 1, "h4 pawn has only the push");
+    Check(CountFrom(edge_moves, 39) == 1, "h4 pawn has only the push");
     Check(ContainsMove(edge_moves, 39, 31), "Ph4 -> h5 (39->31)");
     Check(!ContainsMove(edge_moves, 39, 32), "no file-wrap capture onto a4 (39->32)");
 
     Position edge_a;
     Check(edge_a.FromFen("4k3/8/8/8/P7/8/8/4K3 w - - 0 1"), "parse a-file edge pos");
     std::vector<Move> edge_a_moves = GenerateMoves(edge_a);
-    Check(edge_a_moves.size() == 1, "a4 pawn has only the push");
+    Check(CountFrom(edge_a_moves, 32) == 1, "a4 pawn has only the push");
     Check(ContainsMove(edge_a_moves, 32, 24), "Pa4 -> a5 (32->24)");
     Check(!ContainsMove(edge_a_moves, 32, 23), "no file-wrap capture onto h6 (32->23)");
 }
