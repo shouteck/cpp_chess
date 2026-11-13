@@ -67,12 +67,25 @@ std::vector<Move> GenerateMoves(const Position& pos) {
                 }
                 case PieceType::PAWN: {
                     const int dir = (playing_side == Side::WHITE) ? 1 : -1;
+                    const int promo_rank = (playing_side == Side::WHITE) ? 0 : kBoardSize - 1;
+                    const auto& promo_pieces = (playing_side == Side::WHITE)
+                            ? kWhitePromoPieces : kBlackPromoPieces;
                     int new_i = i - dir;
+                    auto emit = [&](int to) {
+                        if (new_i == promo_rank) {
+                            for (Piece promo : promo_pieces) {
+                                moves.push_back(Move{from, to, promo});
+                            }
+                        }
+                        else {
+                            moves.push_back(Move{from, to});
+                        }
+                    };
                     if (new_i < 0 || new_i >= kBoardSize) continue;
                     int to = new_i * kBoardSize + j;
                     Piece p2 = pos.GetPiece(new_i, j);
                     if (p2 == Piece::EMPTY) {
-                        moves.push_back(Move{from, to});
+                        emit(to);
                     }
                     for (int dc : kPawnCaptureDc) {
                         const int new_j = j + dc;
@@ -80,18 +93,18 @@ std::vector<Move> GenerateMoves(const Position& pos) {
                             to = new_i * kBoardSize + new_j;
                             p2 = pos.GetPiece(new_i, new_j);
                             if (p2 != Piece::EMPTY && PieceSide(p2) != playing_side) {
-                                moves.push_back(Move{from, to});
+                                emit(to);
                             }
                             else if (p2 == Piece::EMPTY && ep && *ep == to) {
-                                moves.push_back(Move{from, to});
+                                emit(to);
                             }
                         }
                     }
                     if ((playing_side == Side::WHITE && i == kWhitePawnStartRow)
                         || (playing_side == Side::BLACK && i == kBlackPawnStartRow)) {
-                        new_i = i - 2 * dir;
-                        to = new_i * kBoardSize + j;
-                        p2 = pos.GetPiece(new_i, j);
+                        int dbl_i = i - 2 * dir;
+                        to = dbl_i * kBoardSize + j;
+                        p2 = pos.GetPiece(dbl_i, j);
                         if ((pos.GetPiece(i - dir, j) == Piece::EMPTY) && (p2 == Piece::EMPTY)) {
                             moves.push_back(Move{from, to});
                         }

@@ -51,6 +51,11 @@ constexpr PieceType GetPieceType(Piece p) noexcept {
     return kPieceType[static_cast<std::size_t>(p)];
 }
 
+static constexpr std::array<Piece, 4> kWhitePromoPieces = { Piece::WHITE_KNIGHT, Piece::WHITE_BISHOP,
+    Piece::WHITE_ROOK, Piece::WHITE_QUEEN, };
+static constexpr std::array<Piece, 4> kBlackPromoPieces = { Piece::BLACK_KNIGHT, Piece::BLACK_BISHOP,
+    Piece::BLACK_ROOK, Piece::BLACK_QUEEN, };
+
 class Position {
     public:
         void SetUpStartingPosition();

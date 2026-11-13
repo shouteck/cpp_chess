@@ -188,6 +188,13 @@ static int CountFrom(const std::vector<Move>& moves, int from) {
     return count;
 }
 
+static bool ContainsPromoMove(const std::vector<Move>& moves, int from, int to, Piece promo) {
+    for (const Move& m : moves) {
+        if (m.from == from && m.to == to && m.promo == promo) return true;
+    }
+    return false;
+}
+
 static void TestKnightMoves() {
     std::cout << "== knight movegen ==\n";
 
@@ -296,6 +303,32 @@ static void TestPawnMoves() {
     Check(!ContainsMove(edge_a_moves, 32, 23), "no file-wrap capture onto h6 (32->23)");
 }
 
+static void TestPromotionMoves() {
+    std::cout << "== promotion movegen ==\n";
+
+    Position p;
+    Check(p.FromFen("k7/4P3/8/8/8/8/8/4K3 w - - 0 1"), "parse white promo pos");
+    std::vector<Move> moves = GenerateMoves(p);
+    Check(CountFrom(moves, 12) == 4, "Pe7 -> e8 yields 4 promo moves");
+    Check(ContainsPromoMove(moves, 12, 4, Piece::WHITE_QUEEN), "e8=Q (12->4)");
+    Check(ContainsPromoMove(moves, 12, 4, Piece::WHITE_KNIGHT), "e8=N (12->4)");
+    Check(!ContainsPromoMove(moves, 12, 4, Piece::EMPTY), "promo never EMPTY");
+
+    Position cap;
+    Check(cap.FromFen("k3r3/3P4/8/8/8/8/8/4K3 w - - 0 1"), "parse promo capture pos");
+    std::vector<Move> cm = GenerateMoves(cap);
+    Check(CountFrom(cm, 11) == 8, "Pd7: 4 push-promos + 4 capture-promos");
+    Check(ContainsPromoMove(cm, 11, 4, Piece::WHITE_QUEEN), "d7xe8=Q (11->4)");
+    Check(ContainsPromoMove(cm, 11, 3, Piece::WHITE_ROOK), "d8=R push-promo (11->3)");
+
+    Position b;
+    Check(b.FromFen("4k3/8/8/8/8/8/4p3/K7 b - - 0 1"), "parse black promo pos");
+    std::vector<Move> bm = GenerateMoves(b);
+    Check(CountFrom(bm, 52) == 4, "pe2 -> e1 yields 4 promo moves");
+    Check(ContainsPromoMove(bm, 52, 60, Piece::BLACK_QUEEN), "e1=q (52->60)");
+    Check(ContainsPromoMove(bm, 52, 60, Piece::BLACK_BISHOP), "e1=b (52->60)");
+}
+
 int main() {
     TestValidFens();
     TestStartposValues();
@@ -306,6 +339,7 @@ int main() {
     TestReuse();
     TestKnightMoves();
     TestPawnMoves();
+    TestPromotionMoves();
 
     if (g_failures == 0) {
         std::cout << "\nALL TESTS PASSED\n";
