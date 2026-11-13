@@ -3,7 +3,7 @@
 #include "board.h"
 
 enum class MoveKind {
-    NORMAL, EN_PASSANT, CASTLE_KINGSIDE, CASTLE_QUEENSIDE,
+    NORMAL, DOUBLE_PUSH, EN_PASSANT, CASTLE_KINGSIDE, CASTLE_QUEENSIDE,
 };
 
 struct Move {

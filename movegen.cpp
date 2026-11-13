@@ -40,7 +40,7 @@ static void GenerateSlidingMoves(const Position& pos, int from, int i, int j,
             new_i += dr; new_j += dc;
             if (new_i < 0 || new_i >= kBoardSize || new_j < 0 || new_j >= kBoardSize) break;
             int to = new_i * kBoardSize + new_j;
-            Piece p2 = pos.GetPiece(new_i, new_j);
+            Piece p2 = pos.GetPiece(to);
             if (p2 == Piece::EMPTY) {
                 moves.push_back(Move{from, to});
             }
@@ -60,7 +60,7 @@ std::vector<Move> GenerateMoves(const Position& pos) {
     for (int i = 0; i < kBoardSize; i++) {
         for (int j = 0; j < kBoardSize; j++) {
             const int from = i * kBoardSize + j;
-            const Piece p1 = pos.GetPiece(i, j);
+            const Piece p1 = pos.GetPiece(from);
             if (p1 == Piece::EMPTY || PieceSide(p1) != playing_side) continue;
 
             const auto type = GetPieceType(p1);
@@ -68,10 +68,10 @@ std::vector<Move> GenerateMoves(const Position& pos) {
             switch (type) {
                 case PieceType::KNIGHT: {
                     for (const auto& [dr, dc] : kKnightDrDc) {
-                        int new_i = i + dr; int new_j = j + dc;
+                        const int new_i = i + dr; const int new_j = j + dc;
                         if (new_i < 0 || new_i >= kBoardSize || new_j < 0 || new_j >= kBoardSize) continue;
                         int to = new_i * kBoardSize + new_j;
-                        Piece p2 = pos.GetPiece(new_i, new_j);
+                        Piece p2 = pos.GetPiece(to);
                         if (p2 != Piece::EMPTY && PieceSide(p2) == playing_side) continue;
                         moves.push_back(Move{from, to});
                     }
@@ -82,7 +82,7 @@ std::vector<Move> GenerateMoves(const Position& pos) {
                     const int promo_rank = (playing_side == Side::WHITE) ? 0 : kBoardSize - 1;
                     const auto& promo_pieces = (playing_side == Side::WHITE)
                             ? kWhitePromoPieces : kBlackPromoPieces;
-                    int new_i = i - dir;
+                    const int new_i = i - dir;
                     auto emit = [&](int to, MoveKind kind = MoveKind::NORMAL) {
                         if (new_i == promo_rank) {
                             for (Piece promo : promo_pieces) {
@@ -95,7 +95,7 @@ std::vector<Move> GenerateMoves(const Position& pos) {
                     };
                     if (new_i < 0 || new_i >= kBoardSize) continue;
                     int to = new_i * kBoardSize + j;
-                    Piece p2 = pos.GetPiece(new_i, j);
+                    Piece p2 = pos.GetPiece(to);
                     if (p2 == Piece::EMPTY) {
                         emit(to);
                     }
@@ -103,7 +103,7 @@ std::vector<Move> GenerateMoves(const Position& pos) {
                         const int new_j = j + dc;
                         if (new_j >= 0 && new_j < kBoardSize) {
                             to = new_i * kBoardSize + new_j;
-                            p2 = pos.GetPiece(new_i, new_j);
+                            p2 = pos.GetPiece(to);
                             if (p2 != Piece::EMPTY && PieceSide(p2) != playing_side) {
                                 emit(to);
                             }
@@ -116,9 +116,9 @@ std::vector<Move> GenerateMoves(const Position& pos) {
                         || (playing_side == Side::BLACK && i == kBlackPawnStartRow)) {
                         int dbl_i = i - 2 * dir;
                         to = dbl_i * kBoardSize + j;
-                        p2 = pos.GetPiece(dbl_i, j);
-                        if ((pos.GetPiece(i - dir, j) == Piece::EMPTY) && (p2 == Piece::EMPTY)) {
-                            moves.push_back(Move{from, to});
+                        p2 = pos.GetPiece(to);
+                        if ((pos.GetPiece(from - kBoardSize * dir) == Piece::EMPTY) && (p2 == Piece::EMPTY)) {
+                            moves.push_back(Move{from, to, Piece::EMPTY, MoveKind::DOUBLE_PUSH});
                         }
                     }
                 }
@@ -138,17 +138,18 @@ std::vector<Move> GenerateMoves(const Position& pos) {
                 }
                 case PieceType::KING: {
                     for (const auto& [dr, dc] : kKingDrDc) {
-                        int new_i = i + dr; int new_j = j + dc;
+                        const int new_i = i + dr; const int new_j = j + dc;
                         if (new_i < 0 || new_i >= kBoardSize || new_j < 0 || new_j >= kBoardSize) continue;
                         int to = new_i * kBoardSize + new_j;
-                        Piece p2 = pos.GetPiece(new_i, new_j);
+                        Piece p2 = pos.GetPiece(to);
                         if (p2 == Piece::EMPTY || PieceSide(p2) != playing_side) {
                             moves.push_back(Move{from, to});
                         }
                     }
+                    const int rights = pos.GetCastlingRights();
                     for (const CastleInfo& c : kCastles) {
                         if (from != c.king_from) continue;
-                        if (!(pos.GetCastlingRights() & c.rights_bit)) continue;
+                        if (!(rights & c.rights_bit)) continue;
                         if (!SquaresAreEmpty(pos, c.empty_lo, c.empty_hi)) continue;
                         moves.push_back(Move{from, c.king_to, Piece::EMPTY,
                             c.king_to > c.king_from ? MoveKind::CASTLE_KINGSIDE : MoveKind::CASTLE_QUEENSIDE});
