@@ -184,7 +184,50 @@ bool Position::FromFen(std::string_view fen) {
     return true;
 }
 
-UndoInfo Position::MakeMove(const Move& m) {
+void Position::UnmakeMove(const Move &m, const UndoInfo &undo) {
+    if (m.promo != Piece::EMPTY) {
+        if (side_to_move == Side::BLACK) board[m.from] = Piece::WHITE_PAWN;
+        else board[m.from] = Piece::BLACK_PAWN;
+    }
+    else board[m.from] = board[m.to];
+    if (m.kind == MoveKind::EN_PASSANT) {
+        const int victim = (side_to_move == Side::BLACK) ? m.to + kBoardSize : m.to - kBoardSize;
+        board[victim] = undo.captured;
+        board[m.to] = Piece::EMPTY;
+    }
+    else board[m.to] = undo.captured;
+    if (m.kind == MoveKind::CASTLE_KINGSIDE || m.kind == MoveKind::CASTLE_QUEENSIDE) {
+        for (const CastleInfo& c : kCastles) {
+            if (m.to == c.king_to) {
+                board[c.rook_from] = board[c.rook_to];
+                board[c.rook_to] = Piece::EMPTY;
+                break;
+            }
+        }
+    }
+
+    castling_rights = undo.castling_rights;
+    en_passant_target = undo.en_passant_target;
+    halfmove_clock = undo.halfmove_clock;
+
+    if (side_to_move == Side::WHITE) fullmove_number -= 1;
+    side_to_move = (side_to_move == Side::WHITE ? Side::BLACK : Side::WHITE);
+}
+
+UndoInfo Position::MakeMove(const Move& m) noexcept {
+    static constexpr std::array<int, kSquareCount> kCastlingUpdate = []() constexpr {
+       std::array<int, kSquareCount> t{};
+       for (int& x : t)
+           x = WHITE_KINGSIDE | WHITE_QUEENSIDE | BLACK_KINGSIDE | BLACK_QUEENSIDE;   // 15
+       t[60] = ~(WHITE_KINGSIDE | WHITE_QUEENSIDE) & 15;   // e1: king left home
+       t[63] = ~WHITE_KINGSIDE  & 15;                      // h1
+       t[56] = ~WHITE_QUEENSIDE & 15;                      // a1
+       t[4]  = ~(BLACK_KINGSIDE | BLACK_QUEENSIDE) & 15;   // e8
+       t[7]  = ~BLACK_KINGSIDE  & 15;                      // h8
+       t[0]  = ~BLACK_QUEENSIDE & 15;                      // a8
+       return t;
+    }();
+
     UndoInfo undo;
     undo.captured = board[m.to];
     undo.castling_rights = castling_rights;
@@ -196,17 +239,8 @@ UndoInfo Position::MakeMove(const Move& m) {
     board[m.to] = (m.promo != Piece::EMPTY) ? m.promo : mover;
     board[m.from] = Piece::EMPTY;
 
-    for (const CastleInfo& c : kCastles) {
-        if (m.from == c.king_from) {
-            castling_rights &= ~c.rights_bit;
-        }
-        if (m.from == c.rook_from || m.to == c.rook_from) {
-            castling_rights &= ~c.rights_bit;
-        }
-    }
-
+    castling_rights &= kCastlingUpdate[m.from] & kCastlingUpdate[m.to];
     en_passant_target = std::nullopt;
-
     const int victim = (side_to_move == Side::WHITE) ? m.to + kBoardSize : m.to - kBoardSize;
 
     switch (m.kind) {
@@ -221,6 +255,7 @@ UndoInfo Position::MakeMove(const Move& m) {
                 if (m.to == c.king_to) {
                     board[c.rook_to] = board[c.rook_from];
                     board[c.rook_from] = Piece::EMPTY;
+                    break;
                 }
             }
             break;

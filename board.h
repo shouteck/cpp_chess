@@ -97,7 +97,7 @@ class Position {
     public:
         void SetUpStartingPosition();
         void PrintBoard() const;
-        UndoInfo MakeMove(const Move& m);
+        [[nodiscard]] UndoInfo MakeMove(const Move& m) noexcept;
         void UnmakeMove(const Move& m, const UndoInfo& undo);
         [[nodiscard]] bool FromFen(std::string_view fen);
         [[nodiscard]] constexpr Piece GetPiece(int row, int col) const noexcept {
