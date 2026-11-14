@@ -369,6 +369,96 @@ static void TestCastleMoves() {
     Check(!ContainsKindMove(wm, 60, 62, MoveKind::CASTLE_KINGSIDE), "black turn: no white castle");
 }
 
+static void TestMakeMove() {
+    std::cout << "== make move ==\n";
+
+    // double push: relocate, ep target = skipped square, halfmove reset
+    Position p;
+    Check(p.FromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), "parse startpos");
+    p.MakeMove(Move{52, 36, Piece::EMPTY, MoveKind::DOUBLE_PUSH});  // e2->e4
+    Check(p.GetPiece(36) == Piece::WHITE_PAWN && p.GetPiece(52) == Piece::EMPTY, "e2->e4 relocates");
+    Check(p.GetEnPassantTarget() == std::optional<int>(44), "double push sets ep=e3 (44)");
+    Check(p.GetHalfmoveClock() == 0 && p.GetFullmoveNumber() == 1, "pawn push: halfmove 0, fullmove 1");
+    Check(p.GetSideToMove() == Side::BLACK, "side flips to black");
+
+    // black double push: ep + fullmove increment
+    Position bp;
+    Check(bp.FromFen("4k3/3p4/8/8/8/8/8/4K3 b - - 0 1"), "parse black pawn pos");
+    bp.MakeMove(Move{11, 27, Piece::EMPTY, MoveKind::DOUBLE_PUSH});  // d7->d5
+    Check(bp.GetEnPassantTarget() == std::optional<int>(19), "black push sets ep=d6 (19)");
+    Check(bp.GetFullmoveNumber() == 2 && bp.GetSideToMove() == Side::WHITE, "fullmove++ after black");
+
+    // normal move: clears ep, halfmove +1
+    Position nm;
+    Check(nm.FromFen("4k3/8/8/3p4/8/8/4P3/4K3 w - d6 0 1"), "parse pos with ep");
+    nm.MakeMove(Move{52, 44});  // e2->e3
+    Check(!nm.GetEnPassantTarget().has_value(), "normal move clears ep target");
+
+    Position nk;
+    Check(nk.FromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), "parse startpos 2");
+    nk.MakeMove(Move{62, 45});  // Ng1->f3
+    Check(nk.GetPiece(45) == Piece::WHITE_KNIGHT && nk.GetPiece(62) == Piece::EMPTY, "Ng1->f3 relocates");
+    Check(nk.GetHalfmoveClock() == 1, "knight move: halfmove +1");
+
+    // capture: victim snapshotted, halfmove reset
+    Position cap;
+    Check(cap.FromFen("4k3/8/8/3p4/8/8/8/4K2Q w - - 5 1"), "parse capture pos");
+    UndoInfo capu = cap.MakeMove(Move{63, 27});  // Qh1 captures d5
+    Check(cap.GetPiece(27) == Piece::WHITE_QUEEN && capu.captured == Piece::BLACK_PAWN, "capture: victim recorded");
+    Check(cap.GetHalfmoveClock() == 0, "capture resets halfmove");
+
+    // en passant capture: victim behind 'to' removed
+    Position epp;
+    Check(epp.FromFen("4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 2"), "parse ep capture pos");
+    UndoInfo epu = epp.MakeMove(Move{28, 19, Piece::EMPTY, MoveKind::EN_PASSANT});  // e5xd6 e.p.
+    Check(epp.GetPiece(19) == Piece::WHITE_PAWN, "ep: capturer lands on d6");
+    Check(epp.GetPiece(27) == Piece::EMPTY, "ep: victim removed from d5");
+    Check(epu.captured == Piece::BLACK_PAWN, "ep: undo.captured = victim pawn");
+    Check(!epp.GetEnPassantTarget().has_value(), "ep move clears ep target");
+
+    // castling: king + rook both relocate
+    Position wk;
+    Check(wk.FromFen("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1"), "parse castle pos");
+    wk.MakeMove(Move{60, 62, Piece::EMPTY, MoveKind::CASTLE_KINGSIDE});
+    Check(wk.GetPiece(62) == Piece::WHITE_KING && wk.GetPiece(61) == Piece::WHITE_ROOK, "O-O: K on g1, R on f1");
+    Check(wk.GetPiece(60) == Piece::EMPTY && wk.GetPiece(63) == Piece::EMPTY, "O-O: e1,h1 vacated");
+    Check(wk.GetCastlingRights() == (BLACK_KINGSIDE | BLACK_QUEENSIDE), "O-O: white rights cleared");
+
+    Position wq;
+    Check(wq.FromFen("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1"), "parse castle pos 2");
+    wq.MakeMove(Move{60, 58, Piece::EMPTY, MoveKind::CASTLE_QUEENSIDE});
+    Check(wq.GetPiece(58) == Piece::WHITE_KING && wq.GetPiece(59) == Piece::WHITE_ROOK, "O-O-O: K on c1, R on d1");
+    Check(wq.GetPiece(60) == Piece::EMPTY && wq.GetPiece(56) == Piece::EMPTY, "O-O-O: e1,a1 vacated");
+
+    Position bk;
+    Check(bk.FromFen("r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1"), "parse black castle pos");
+    bk.MakeMove(Move{4, 6, Piece::EMPTY, MoveKind::CASTLE_KINGSIDE});
+    Check(bk.GetPiece(6) == Piece::BLACK_KING && bk.GetPiece(5) == Piece::BLACK_ROOK, "black O-O: k on g8, r on f8");
+    Check(bk.GetCastlingRights() == (WHITE_KINGSIDE | WHITE_QUEENSIDE), "black O-O: black rights cleared");
+
+    // rights decay: king move kills both, rook move kills one, rook capture kills theirs
+    Position km;
+    Check(km.FromFen("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1"), "parse rights pos");
+    km.MakeMove(Move{60, 59});  // Ke1->d1
+    Check(km.GetCastlingRights() == (BLACK_KINGSIDE | BLACK_QUEENSIDE), "king move: both white bits die");
+
+    Position rm;
+    Check(rm.FromFen("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1"), "parse rook pos");
+    rm.MakeMove(Move{63, 55});  // Rh1->h2
+    Check(rm.GetCastlingRights() == (WHITE_QUEENSIDE | BLACK_KINGSIDE | BLACK_QUEENSIDE), "rook h1: only K dies");
+
+    Position rc;
+    Check(rc.FromFen("r3k3/8/8/8/8/8/8/4K2R w kq - 0 1"), "parse rook-capture pos");
+    rc.MakeMove(Move{63, 7});  // Rxh8
+    Check(rc.GetCastlingRights() == BLACK_QUEENSIDE, "capture h8: black k dies, q survives");
+
+    // promotion: promo piece lands, pawn gone
+    Position pr;
+    Check(pr.FromFen("4k3/4P3/8/8/8/8/8/4K3 w - - 0 1"), "parse promo pos");
+    pr.MakeMove(Move{12, 4, Piece::WHITE_QUEEN});  // e7->e8=Q
+    Check(pr.GetPiece(4) == Piece::WHITE_QUEEN && pr.GetPiece(12) == Piece::EMPTY, "promotion: queen lands on e8");
+}
+
 int main() {
     TestValidFens();
     TestStartposValues();
@@ -381,6 +471,7 @@ int main() {
     TestPawnMoves();
     TestPromotionMoves();
     TestCastleMoves();
+    TestMakeMove();
 
     if (g_failures == 0) {
         std::cout << "\nALL TESTS PASSED\n";

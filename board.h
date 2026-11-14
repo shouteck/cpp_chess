@@ -69,10 +69,36 @@ constexpr std::array<CastleInfo, 4> kCastles = {{
     {CastlingMask::BLACK_QUEENSIDE, 4, 2, 1, 3, 0, 3},
 }};
 
+/*
+UndoInfo is information required to restore position state that Move lacks
+the key pattern here is many-to-one
+if the previous state can be many, then there's no way to revert them
+
+1. captured
+there's no way to tell between a normal move or a capture move
+2. castling_rights
+there are 2 states where castle is allowed for a certain side
+for example, KQ, K, both allows kingside castle
+3. en_passant_target
+there's many different en_passant_targets and they only last for a move
+4. half_move_clock
+because pawn move and capture move changes it to 0
+*/
+struct UndoInfo {
+    Piece captured;
+    int castling_rights;
+    std::optional<int> en_passant_target;
+    int halfmove_clock;
+};
+
+struct Move;
+
 class Position {
     public:
         void SetUpStartingPosition();
         void PrintBoard() const;
+        UndoInfo MakeMove(const Move& m);
+        void UnmakeMove(const Move& m, const UndoInfo& undo);
         [[nodiscard]] bool FromFen(std::string_view fen);
         [[nodiscard]] constexpr Piece GetPiece(int row, int col) const noexcept {
             return board[row * kBoardSize + col];

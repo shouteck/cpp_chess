@@ -1,4 +1,5 @@
 #include "board.h"
+#include "move.h"
 #include <climits>
 #include <iostream>
 #include <optional>
@@ -76,6 +77,15 @@ void Position::PrintBoard() const {
     }
 }
 
+/*
+"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
+how to read this
+rank 8 / ... / rank 1 side_to_move castling_rights en_passant_target halfmove_clock fullmove_number
+
+there might be numbers in the ranks that indicates the number of conseuctive empty squares
+
+*/
 bool Position::FromFen(std::string_view fen) {
     Position temp;
     for (int i = 0; i < kBoardSize; i++) {
@@ -172,4 +182,61 @@ bool Position::FromFen(std::string_view fen) {
 
     *this = temp;
     return true;
+}
+
+UndoInfo Position::MakeMove(const Move& m) {
+    UndoInfo undo;
+    undo.captured = board[m.to];
+    undo.castling_rights = castling_rights;
+    undo.en_passant_target = en_passant_target;
+    undo.halfmove_clock = halfmove_clock;
+
+    const Piece mover = board[m.from];
+
+    board[m.to] = (m.promo != Piece::EMPTY) ? m.promo : mover;
+    board[m.from] = Piece::EMPTY;
+
+    for (const CastleInfo& c : kCastles) {
+        if (m.from == c.king_from) {
+            castling_rights &= ~c.rights_bit;
+        }
+        if (m.from == c.rook_from || m.to == c.rook_from) {
+            castling_rights &= ~c.rights_bit;
+        }
+    }
+
+    en_passant_target = std::nullopt;
+
+    const int victim = (side_to_move == Side::WHITE) ? m.to + kBoardSize : m.to - kBoardSize;
+
+    switch (m.kind) {
+        case MoveKind::EN_PASSANT: {
+            undo.captured = board[victim];
+            board[victim] = Piece::EMPTY;
+            break;
+        }
+        case MoveKind::CASTLE_KINGSIDE:
+        case MoveKind::CASTLE_QUEENSIDE: {
+            for (const CastleInfo& c : kCastles) {
+                if (m.to == c.king_to) {
+                    board[c.rook_to] = board[c.rook_from];
+                    board[c.rook_from] = Piece::EMPTY;
+                }
+            }
+            break;
+        }
+        case MoveKind::DOUBLE_PUSH: {
+            en_passant_target = victim;
+            break;
+        }
+        default: break;
+
+    }
+
+    if (GetPieceType(mover) == PieceType::PAWN || undo.captured != Piece::EMPTY) halfmove_clock = 0;
+    else halfmove_clock += 1;
+    if (side_to_move == Side::BLACK) fullmove_number += 1;
+    side_to_move = (side_to_move == Side::WHITE ? Side::BLACK : Side::WHITE);
+
+    return undo;
 }
