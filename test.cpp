@@ -507,6 +507,99 @@ static void TestUnmakeMove() {
         Move{52, 44}, "move clears ep (ep restore)");
 }
 
+static void TestSquareAttacked() {
+    std::cout << "== square attacked ==\n";
+    {
+        Position p;
+        Check(p.FromFen("4k3/8/8/8/8/8/B7/R3K2R w - - 0 1"), "parse bishop pos");
+        Check(IsSquareAttacked(p, 57, Side::WHITE), "bishop a2 hits b1");
+        Check(IsSquareAttacked(p, 41, Side::WHITE), "bishop a2 hits b3");
+        Check(IsSquareAttacked(p, 20, Side::WHITE), "bishop a2 hits e6 mid-ray");
+        Check(IsSquareAttacked(p, 6, Side::WHITE), "bishop a2 hits g8 ray end");
+        Check(!IsSquareAttacked(p, 19, Side::WHITE), "bishop a2 misses d6 off-ray");
+        Check(!IsSquareAttacked(p, 40, Side::WHITE), "bishop a2 blocks rook a1 ray");
+        Check(!IsSquareAttacked(p, 41, Side::BLACK), "b3 not attacked by black");
+    }
+    {
+        Position p;
+        Check(p.FromFen("4k3/8/8/8/2P5/8/B7/R3K2R w - - 0 1"), "parse blocked bishop pos");
+        Check(IsSquareAttacked(p, 41, Side::WHITE), "b3 still hit before blocker");
+        Check(!IsSquareAttacked(p, 20, Side::WHITE), "pawn c4 blocks e6");
+        Check(!IsSquareAttacked(p, 6, Side::WHITE), "pawn c4 blocks g8");
+    }
+    {
+        Position p;
+        Check(p.FromFen("4k3/8/8/8/8/8/8/4K2Q w - - 0 1"), "parse queen pos");
+        Check(IsSquareAttacked(p, 7, Side::WHITE), "queen h1 hits h8 file end");
+        Check(IsSquareAttacked(p, 62, Side::WHITE), "queen h1 hits g1");
+        Check(IsSquareAttacked(p, 36, Side::WHITE), "queen h1 hits e4 diagonal");
+        Check(IsSquareAttacked(p, 0, Side::WHITE), "queen h1 hits a8 diagonal end");
+        Check(IsSquareAttacked(p, 61, Side::WHITE), "queen h1 hits f1");
+        Check(!IsSquareAttacked(p, 58, Side::WHITE), "own king e1 blocks c1");
+    }
+    {
+        Position p;
+        Check(p.FromFen("4k3/8/8/8/8/8/8/r3K3 w - - 0 1"), "parse black rook pos");
+        Check(IsSquareAttacked(p, 59, Side::BLACK), "black rook a1 hits d1");
+        Check(IsSquareAttacked(p, 0, Side::BLACK), "black rook a1 hits a8");
+        Check(!IsSquareAttacked(p, 58, Side::WHITE), "c1 not attacked by white");
+        Check(!IsSquareAttacked(p, 0, Side::WHITE), "a8 not attacked by white");
+    }
+    {
+        Position p;
+        Check(p.FromFen("4k3/8/8/4P3/4p3/8/8/4K3 w - - 0 1"), "parse pawn pos");
+        Check(IsSquareAttacked(p, 19, Side::WHITE), "white e5 pawn hits d6");
+        Check(IsSquareAttacked(p, 21, Side::WHITE), "white e5 pawn hits f6");
+        Check(!IsSquareAttacked(p, 19, Side::BLACK), "d6 not attacked by black");
+        Check(IsSquareAttacked(p, 43, Side::BLACK), "black e4 pawn hits d3");
+        Check(IsSquareAttacked(p, 45, Side::BLACK), "black e4 pawn hits f3");
+        Check(!IsSquareAttacked(p, 36, Side::WHITE), "white pawn cannot attack backwards");
+        Check(!IsSquareAttacked(p, 28, Side::BLACK), "black pawn cannot attack backwards");
+    }
+    {
+        Position p;
+        Check(p.FromFen("4k3/1P6/8/8/8/8/8/4K3 w - - 0 1"), "parse edge pawn pos");
+        Check(IsSquareAttacked(p, 0, Side::WHITE), "white b7 pawn hits a8");
+        Check(IsSquareAttacked(p, 2, Side::WHITE), "white b7 pawn hits c8");
+    }
+    {
+        Position p;
+        Check(p.FromFen("4k3/8/8/8/4N3/8/8/4K3 w - - 0 1"), "parse knight pos");
+        Check(IsSquareAttacked(p, 19, Side::WHITE), "knight e4 hits d6");
+        Check(IsSquareAttacked(p, 30, Side::WHITE), "knight e4 hits g5");
+        Check(IsSquareAttacked(p, 51, Side::WHITE), "knight e4 hits d2");
+        Check(!IsSquareAttacked(p, 28, Side::WHITE), "knight e4 misses e5");
+        Check(!IsSquareAttacked(p, 19, Side::BLACK), "d6 not attacked by black");
+    }
+    {
+        Position p;
+        Check(p.FromFen("4k3/8/8/8/8/8/8/N3K3 w - - 0 1"), "parse corner knight pos");
+        Check(IsSquareAttacked(p, 41, Side::WHITE), "knight a1 hits b3");
+        Check(IsSquareAttacked(p, 50, Side::WHITE), "knight a1 hits c2");
+        Check(!IsSquareAttacked(p, 48, Side::WHITE), "knight a1 misses a2");
+    }
+    {
+        Position p;
+        Check(p.FromFen("8/8/8/8/3k4/8/8/4K3 w - - 0 1"), "parse enemy king pos");
+        Check(IsSquareAttacked(p, 36, Side::BLACK), "black king d4 hits e4");
+        Check(IsSquareAttacked(p, 43, Side::BLACK), "black king d4 hits d3");
+        Check(!IsSquareAttacked(p, 19, Side::BLACK), "d6 out of king reach");
+    }
+    {
+        Position p;
+        Check(p.FromFen("8/8/8/8/8/8/8/4Kk2 w - - 0 1"), "parse adjacent kings pos");
+        Check(IsSquareAttacked(p, 60, Side::BLACK), "adjacent black king hits e1");
+        Check(IsSquareAttacked(p, 61, Side::WHITE), "white king hits f1");
+        Check(!IsSquareAttacked(p, 62, Side::WHITE), "g1 out of white king reach");
+    }
+    {
+        Position p;
+        Check(p.FromFen("4k3/8/8/8/8/8/8/4K3 w - - 0 1"), "parse bare kings pos");
+        Check(!IsSquareAttacked(p, 36, Side::WHITE), "e4 attacked by no one (white)");
+        Check(!IsSquareAttacked(p, 36, Side::BLACK), "e4 attacked by no one (black)");
+    }
+}
+
 int main() {
     TestValidFens();
     TestStartposValues();
@@ -521,6 +614,7 @@ int main() {
     TestCastleMoves();
     TestMakeMove();
     TestUnmakeMove();
+    TestSquareAttacked();
 
     if (g_failures == 0) {
         std::cout << "\nALL TESTS PASSED\n";

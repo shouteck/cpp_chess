@@ -17,7 +17,15 @@ static constexpr std::array<std::pair<int, int>, 4> kRookDrDc = {{
 }};
 
 static constexpr std::array<std::pair<int, int>, 8> kKingDrDc = {{
-    {-1, -1}, {-1, 0}, {-1, 1}, { 0, -1}, { 0, 1}, { 1, -1}, { 1, 0}, { 1, 1}
+    {-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1},
+}};
+
+static constexpr std::array<std::pair<int, int>, 2> kWhitePawnAttackDrDc = {{
+    {1, 1}, {1, -1},
+}};
+
+static constexpr std::array<std::pair<int, int>, 2> kBlackPawnAttackDrDc = {{
+    {-1, 1}, {-1, -1},
 }};
 
 static constexpr bool SquaresAreEmpty(const Position& pos, int lo, int hi) {
@@ -164,12 +172,10 @@ std::vector<Move> GenerateMoves(const Position& pos) {
     return moves;
 }
 
-bool IsSquareAttacked(const Position &pos, int sq, Side by_side) {
-
-    const int i = sq / kBoardSize;
-    const int j = sq % kBoardSize;
-
-    for (auto const& [dr, dc] : kBishopDrDc) {
+template<std::size_t N>
+static bool IsAttackedAlongRays(const Position& pos, int i, int j, Side by_side,
+    const std::array<std::pair<int, int>, N>& directions, PieceType slider) {
+    for (auto const& [dr, dc] : directions) {
         int new_i = i; int new_j = j;
         while (true) {
             new_i += dr; new_j += dc;
@@ -178,15 +184,40 @@ bool IsSquareAttacked(const Position &pos, int sq, Side by_side) {
             if (p != Piece::EMPTY) {
                 if (PieceSide(p) == by_side) {
                     const auto type = GetPieceType(p);
-                    const int dist = new_i - i;
-                    if (type == PieceType::BISHOP || type == PieceType::QUEEN) return true;
-                    if (type == PieceType::PAWN
-                        && ((by_side == Side::WHITE && dist == 1) || (by_side == Side::BLACK && dist == -1)))
-                            return true;
+                    if (type == slider || type == PieceType::QUEEN) return true;
                 }
                 break;
             }
         }
     }
+    return false;
+}
+
+template <std::size_t N>
+static bool IsAttackedByLeaper(const Position& pos, int i, int j, Side by_side,
+    const std::array<std::pair<int, int>, N>& offsets, PieceType leaper) {
+    for (const auto& [dr, dc] : offsets) {
+        int new_i = i + dr; int new_j = j + dc;
+        if (new_i < 0 || new_i >= kBoardSize || new_j < 0 || new_j >= kBoardSize) continue;
+        Piece p = pos.GetPiece(new_i, new_j);
+        if (p != Piece::EMPTY) {
+            if (PieceSide(p) == by_side) {
+                const auto type = GetPieceType(p);
+                if (type == leaper) return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool IsSquareAttacked(const Position &pos, int sq, Side by_side) {
+    const int i = sq / kBoardSize;
+    const int j = sq % kBoardSize;
+    if (IsAttackedAlongRays(pos, i, j, by_side, kBishopDrDc, PieceType::BISHOP)) return true;
+    if (IsAttackedAlongRays(pos, i, j, by_side, kRookDrDc, PieceType::ROOK)) return true;
+    if (IsAttackedByLeaper(pos, i, j, by_side,
+        by_side == Side::WHITE ? kWhitePawnAttackDrDc : kBlackPawnAttackDrDc, PieceType::PAWN)) return true;
+    if (IsAttackedByLeaper(pos, i, j, by_side, kKnightDrDc, PieceType::KNIGHT)) return true;
+    if (IsAttackedByLeaper(pos, i, j, by_side, kKingDrDc, PieceType::KING)) return true;
     return false;
 }
