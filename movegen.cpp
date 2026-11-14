@@ -163,3 +163,30 @@ std::vector<Move> GenerateMoves(const Position& pos) {
     }
     return moves;
 }
+
+bool IsSquareAttacked(const Position &pos, int sq, Side by_side) {
+
+    const int i = sq / kBoardSize;
+    const int j = sq % kBoardSize;
+
+    for (auto const& [dr, dc] : kBishopDrDc) {
+        int new_i = i; int new_j = j;
+        while (true) {
+            new_i += dr; new_j += dc;
+            if (new_i < 0 || new_i >= kBoardSize || new_j < 0 || new_j >= kBoardSize) break;
+            Piece p = pos.GetPiece(new_i, new_j);
+            if (p != Piece::EMPTY) {
+                if (PieceSide(p) == by_side) {
+                    const auto type = GetPieceType(p);
+                    const int dist = new_i - i;
+                    if (type == PieceType::BISHOP || type == PieceType::QUEEN) return true;
+                    if (type == PieceType::PAWN
+                        && ((by_side == Side::WHITE && dist == 1) || (by_side == Side::BLACK && dist == -1)))
+                            return true;
+                }
+                break;
+            }
+        }
+    }
+    return false;
+}
