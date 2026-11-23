@@ -93,6 +93,10 @@ struct UndoInfo {
 
 struct Move;
 
+constexpr Side Enemy(Side s) {
+    return s == Side::WHITE ? Side::BLACK : Side::WHITE;
+}
+
 class Position {
     public:
         void SetUpStartingPosition();

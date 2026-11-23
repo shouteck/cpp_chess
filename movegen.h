@@ -4,3 +4,4 @@
 
 std::vector<Move> GenerateMoves(const Position& pos);
 bool IsSquareAttacked(const Position& pos, int sq, Side by_side);
+std::vector<Move> GenerateLegalMoves(Position& pos);

@@ -1,6 +1,7 @@
 #include "movegen.h"
 #include "board.h"
 #include "move.h"
+#include <optional>
 
 static constexpr std::array<std::pair<int, int>, 8> kKnightDrDc = {{
     {2, 1}, {2, -1}, {1, 2}, {1, -2}, {-2, 1}, {-2, -1}, {-1, 2}, {-1, -2},
@@ -220,4 +221,39 @@ bool IsSquareAttacked(const Position &pos, int sq, Side by_side) {
     if (IsAttackedByLeaper(pos, i, j, by_side, kKnightDrDc, PieceType::KNIGHT)) return true;
     if (IsAttackedByLeaper(pos, i, j, by_side, kKingDrDc, PieceType::KING)) return true;
     return false;
+}
+
+static std::optional<int> FindKing(const Position& pos, Side side) {
+    for (int i = 0; i < kSquareCount; i++) {
+       Piece p = pos.GetPiece(i);
+        if (p != Piece::EMPTY) {
+            if (PieceSide(p) == side) {
+                const auto type = GetPieceType(p);
+                if (type == PieceType::KING) return i;
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+std::vector<Move> GenerateLegalMoves(Position& pos) {
+    std::vector<Move> candidates = GenerateMoves(pos);
+    std::vector<Move> legal;
+    legal.reserve(candidates.size());
+    for (const auto& m : candidates) {
+        UndoInfo ui = pos.MakeMove(m);
+        Side current_side = pos.GetSideToMove();
+        std::optional<int> king_square = FindKing(pos, Enemy(current_side));
+        bool illegal = king_square && IsSquareAttacked(pos, *king_square, current_side);
+        pos.UnmakeMove(m, ui);
+        if (m.kind == MoveKind::CASTLE_KINGSIDE || m.kind == MoveKind::CASTLE_QUEENSIDE) {
+            for (int i = std::min(m.from, m.to); i <= std::max(m.from, m.to); i++) {
+                if (IsSquareAttacked(pos, i, current_side)) {
+                    illegal = true; break;
+                }
+            }
+        }
+        if (!illegal) legal.push_back(m);
+    }
+    return legal;
 }

@@ -600,6 +600,84 @@ static void TestSquareAttacked() {
     }
 }
 
+static void TestLegalMoves() {
+    std::cout << "== legal moves ==\n";
+    auto has = [](const std::vector<Move>& v, int from, int to,
+                  MoveKind kind = MoveKind::NORMAL) {
+        for (const auto& mv : v)
+            if (mv.from == from && mv.to == to && mv.kind == kind) return true;
+        return false;
+    };
+    {
+        Position p;
+        Check(p.FromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), "parse startpos");
+        Check(GenerateLegalMoves(p).size() == 20, "startpos: all 20 pseudo-legal are legal");
+    }
+    {
+        Position p;
+        Check(p.FromFen("4r2k/8/8/8/8/8/4N3/4K3 w - - 0 1"), "parse pinned knight pos");
+        auto legal = GenerateLegalMoves(p);
+        Check(legal.size() == 4, "pinned knight: only king moves survive");
+        Check(!has(legal, 52, 35), "pinned Ne2 cannot go d4");
+        Check(has(legal, 60, 59), "Kd1 still legal");
+    }
+    {
+        Position p;
+        Check(p.FromFen("3r3k/8/8/8/8/8/8/4K3 w - - 0 1"), "parse king step pos");
+        auto legal = GenerateLegalMoves(p);
+        Check(!has(legal, 60, 59), "Kd1 rejected: d-file covered by rook");
+        Check(!has(legal, 60, 51), "Kd2 rejected: still on d-file");
+        Check(has(legal, 60, 61), "Kf1 legal");
+        Check(has(legal, 60, 52), "Ke2 legal");
+        Check(legal.size() == 3, "3 of 5 king moves legal");
+    }
+    {
+        Position p;
+        Check(p.FromFen("4r2k/8/8/8/8/8/8/4KB2 w - - 0 1"), "parse in-check pos");
+        auto legal = GenerateLegalMoves(p);
+        Check(has(legal, 61, 52), "Be2 blocks the check");
+        Check(!has(legal, 61, 54), "Bg2 does not block: illegal");
+        Check(!has(legal, 60, 52), "Ke2 stays on e-file: illegal");
+        Check(has(legal, 60, 59), "Kd1 evades");
+        Check(legal.size() == 4, "in check: 4 legal moves");
+    }
+    {
+        Position p;
+        Check(p.FromFen("7k/8/8/KPp4r/8/8/8/8 w - c6 0 1"), "parse ep pin pos");
+        auto legal = GenerateLegalMoves(p);
+        Check(!has(legal, 25, 18, MoveKind::EN_PASSANT), "ep exposes king to rook: illegal");
+        Check(has(legal, 25, 17), "b6 push still legal");
+    }
+    {
+        Position p;
+        Check(p.FromFen("5r1k/8/8/8/8/8/8/R3K2R w KQ - 0 1"), "parse castle-through-check pos");
+        auto legal = GenerateLegalMoves(p);
+        Check(!has(legal, 60, 62, MoveKind::CASTLE_KINGSIDE), "O-O rejected: f1 attacked");
+        Check(has(legal, 60, 58, MoveKind::CASTLE_QUEENSIDE), "O-O-O still legal");
+    }
+    {
+        Position p;
+        Check(p.FromFen("4r2k/8/8/8/8/8/8/R3K2R w KQ - 0 1"), "parse castle-out-of-check pos");
+        auto legal = GenerateLegalMoves(p);
+        Check(!has(legal, 60, 62, MoveKind::CASTLE_KINGSIDE), "O-O rejected: e1 attacked");
+        Check(!has(legal, 60, 58, MoveKind::CASTLE_QUEENSIDE), "O-O-O rejected: e1 attacked");
+    }
+    {
+        Position p;
+        Check(p.FromFen("6rk/8/8/8/8/8/8/R3K2R w KQ - 0 1"), "parse castle-into-check pos");
+        auto legal = GenerateLegalMoves(p);
+        Check(!has(legal, 60, 62, MoveKind::CASTLE_KINGSIDE), "O-O rejected: g1 attacked");
+        Check(has(legal, 60, 58, MoveKind::CASTLE_QUEENSIDE), "O-O-O still legal");
+    }
+    {
+        Position p;
+        Check(p.FromFen("1r5k/8/8/8/8/8/8/R3K2R w KQ - 0 1"), "parse b1-attacked pos");
+        auto legal = GenerateLegalMoves(p);
+        Check(has(legal, 60, 58, MoveKind::CASTLE_QUEENSIDE), "O-O-O legal: b1 attack irrelevant");
+        Check(has(legal, 60, 62, MoveKind::CASTLE_KINGSIDE), "O-O legal too");
+    }
+}
+
 int main() {
     TestValidFens();
     TestStartposValues();
@@ -615,6 +693,7 @@ int main() {
     TestMakeMove();
     TestUnmakeMove();
     TestSquareAttacked();
+    TestLegalMoves();
 
     if (g_failures == 0) {
         std::cout << "\nALL TESTS PASSED\n";
