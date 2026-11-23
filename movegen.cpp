@@ -237,23 +237,26 @@ static std::optional<int> FindKing(const Position& pos, Side side) {
 }
 
 std::vector<Move> GenerateLegalMoves(Position& pos) {
-    std::vector<Move> candidates = GenerateMoves(pos);
-    std::vector<Move> legal;
-    legal.reserve(candidates.size());
-    for (const auto& m : candidates) {
+    std::vector<Move> moves = GenerateMoves(pos);
+    std::size_t kept = 0;
+    Side mover = pos.GetSideToMove();
+    Side enemy = Enemy(mover);
+    std::optional<int> king_square = FindKing(pos, mover);
+    if (!king_square) return {};
+    for (const auto& m : moves) {
         UndoInfo ui = pos.MakeMove(m);
-        Side current_side = pos.GetSideToMove();
-        std::optional<int> king_square = FindKing(pos, Enemy(current_side));
-        bool illegal = king_square && IsSquareAttacked(pos, *king_square, current_side);
-        pos.UnmakeMove(m, ui);
+        int ksq = (m.from == *king_square) ? m.to : *king_square;
+        bool illegal = IsSquareAttacked(pos, ksq, enemy);
         if (m.kind == MoveKind::CASTLE_KINGSIDE || m.kind == MoveKind::CASTLE_QUEENSIDE) {
             for (int i = std::min(m.from, m.to); i <= std::max(m.from, m.to); i++) {
-                if (IsSquareAttacked(pos, i, current_side)) {
+                if (IsSquareAttacked(pos, i, enemy)) {
                     illegal = true; break;
                 }
             }
         }
-        if (!illegal) legal.push_back(m);
+        if (!illegal) moves[kept++] = m;
+        pos.UnmakeMove(m, ui);
     }
-    return legal;
+    moves.resize(kept);
+    return moves;
 }
