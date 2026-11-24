@@ -133,3 +133,5 @@ class Position {
         int fullmove_number;
         std::optional<int> en_passant_target;
 };
+
+std::optional<int> FindKing(const Position& pos, Side side);

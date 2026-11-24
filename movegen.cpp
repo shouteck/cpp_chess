@@ -223,19 +223,6 @@ bool IsSquareAttacked(const Position &pos, int sq, Side by_side) {
     return false;
 }
 
-static std::optional<int> FindKing(const Position& pos, Side side) {
-    for (int i = 0; i < kSquareCount; i++) {
-       Piece p = pos.GetPiece(i);
-        if (p != Piece::EMPTY) {
-            if (PieceSide(p) == side) {
-                const auto type = GetPieceType(p);
-                if (type == PieceType::KING) return i;
-            }
-        }
-    }
-    return std::nullopt;
-}
-
 std::vector<Move> GenerateLegalMoves(Position& pos) {
     std::vector<Move> moves = GenerateMoves(pos);
     std::size_t kept = 0;

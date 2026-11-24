@@ -2,6 +2,7 @@
 #include "eval.h"
 #include "movegen.h"
 #include "perft.h"
+#include "search.h"
 #include <iostream>
 #include <optional>
 #include <string>
@@ -748,6 +749,51 @@ static void TestEvaluate() {
     }
 }
 
+static void TestSearch() {
+    std::cout << "== search ==\n";
+    // free queen: Qh1 must capture the hanging Qd5 (h1=63, d5=27)
+    {
+        Position p;
+        Check(p.FromFen("4k3/8/8/3q4/8/8/8/4K2Q w - - 0 1"), "parse free-queen pos");
+        auto best = FindBestMove(p, 2);
+        Check(best.has_value(), "finds a move");
+        Check(best && best->from == 63 && best->to == 27, "captures the hanging queen");
+    }
+    // mate in 1 available: the chosen move must actually deliver mate
+    {
+        Position p;
+        Check(p.FromFen("k7/2K5/8/8/8/8/8/7Q w - - 0 1"), "parse mate-in-1 pos");
+        auto best = FindBestMove(p, 2);
+        Check(best.has_value(), "finds a move");
+        if (best) {
+            UndoInfo ui = p.MakeMove(*best);
+            (void)ui;
+            auto replies = GenerateLegalMoves(p);
+            auto bk = FindKing(p, Side::BLACK);
+            Check(replies.empty() && bk && IsSquareAttacked(p, *bk, Side::WHITE),
+                  "chosen move delivers mate");
+        }
+    }
+    // stalemate (a8 boxed by Qb6, not in check): no legal move to return
+    {
+        Position p;
+        Check(p.FromFen("k7/8/1Q6/8/8/8/8/K7 b - - 0 1"), "parse stalemate pos");
+        Check(!FindBestMove(p, 2).has_value(), "stalemate returns nullopt");
+    }
+    // checkmate (Qb7 defended by Kc6): no legal move to return
+    {
+        Position p;
+        Check(p.FromFen("k7/1Q6/2K5/8/8/8/8/8 b - - 0 1"), "parse mated pos");
+        Check(!FindBestMove(p, 2).has_value(), "mated side returns nullopt");
+    }
+    // ordinary position: returns some move
+    {
+        Position p;
+        Check(p.FromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), "parse startpos");
+        Check(FindBestMove(p, 2).has_value(), "startpos yields a move");
+    }
+}
+
 int main() {
     TestValidFens();
     TestStartposValues();
@@ -766,6 +812,7 @@ int main() {
     TestLegalMoves();
     TestPerft();
     TestEvaluate();
+    TestSearch();
 
     if (g_failures == 0) {
         std::cout << "\nALL TESTS PASSED\n";
