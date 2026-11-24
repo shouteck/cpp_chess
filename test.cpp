@@ -1,4 +1,5 @@
 #include "board.h"
+#include "eval.h"
 #include "movegen.h"
 #include "perft.h"
 #include <iostream>
@@ -719,6 +720,34 @@ static void TestPerft() {
     }
 }
 
+static void TestEvaluate() {
+    std::cout << "== evaluate (material) ==\n";
+    struct Case { const char* fen; int expected; };
+    const Case cases[] = {
+        // balanced material
+        {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 0},
+        // eval is white-absolute: identical position, black to move, same score
+        {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1", 0},
+        // bare kings: every empty square must score nothing
+        {"4k3/8/8/8/8/8/8/4K3 w - - 0 1", 0},
+        // lone white pawn, both sides to move
+        {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", 1},
+        {"4k3/8/8/8/8/8/4P3/4K3 b - - 0 1", 1},
+        // black material while white to move: sign follows the piece, not the turn
+        {"4k3/4p3/8/8/8/8/8/4K3 w - - 0 1", -1},
+        // white up a queen
+        {"rnb1kbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 9},
+        // black up a rook (white a1 removed)
+        {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/1NBQKBNR w Kkq - 0 1", -5},
+    };
+    for (const auto& c : cases) {
+        Position p;
+        Check(p.FromFen(c.fen), "parse eval position");
+        Check(Evaluate(p) == c.expected,
+            "eval = " + std::to_string(c.expected) + " : " + c.fen);
+    }
+}
+
 int main() {
     TestValidFens();
     TestStartposValues();
@@ -736,6 +765,7 @@ int main() {
     TestSquareAttacked();
     TestLegalMoves();
     TestPerft();
+    TestEvaluate();
 
     if (g_failures == 0) {
         std::cout << "\nALL TESTS PASSED\n";
