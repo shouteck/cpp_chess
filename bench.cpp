@@ -1,6 +1,10 @@
 #include "board.h"
+#include "perft.h"
 #include <chrono>
+#include <cstdint>
 #include <iostream>
+#include <optional>
+#include <string_view>
 
 char PieceToCharIfElse(Piece piece) {
     switch (piece) {
@@ -32,7 +36,54 @@ char PieceToCharTable(Piece piece) {
     return kPieceChars[static_cast<size_t>(piece)];
 }
 
+struct PerftResult {
+    std::uint64_t nodes;
+    double elapsed_ms;
+};
+
+std::optional<PerftResult> TimePerft(std::string_view fen, int depth) {
+    Position pos;
+    if (!pos.FromFen(fen)) return std::nullopt;
+    auto start = std::chrono::steady_clock::now();
+    std::uint64_t nodes = Perft(pos, depth);
+    auto end = std::chrono::steady_clock::now();
+    return PerftResult{nodes,
+            std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(end - start).count()};
+}
+
+struct BenchCase {
+    const char* name;
+    std::string_view fen;
+    int depth;
+};
+
+static void RunPerftBench() {
+    static constexpr int kRuns = 3;
+    const BenchCase cases[] = {
+        {"startpos", "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 5},
+        {"kiwipete", "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1", 4},
+    };
+    std::cout << "== perft bench ==\n";
+    for (const auto& c : cases) {
+        std::optional<PerftResult> best;
+        for (int i = 0; i < kRuns; ++i) {
+            auto r = TimePerft(c.fen, c.depth);
+            if (!r) { std::cout << c.name << ": bad FEN\n"; break; }
+            if (!best || r->elapsed_ms < best->elapsed_ms) best = r;
+        }
+        if (best) {
+            double nps = static_cast<double>(best->nodes) * 1000.0 / best->elapsed_ms;
+            std::cout << c.name << " d" << c.depth
+                      << "  nodes=" << best->nodes
+                      << "  ms=" << best->elapsed_ms
+                      << "  nps=" << static_cast<std::uint64_t>(nps) << "\n";
+        }
+    }
+}
+
 int main() {
+
+    RunPerftBench();
 
     static constexpr Piece kAllPieces[] = {
         Piece::EMPTY,
